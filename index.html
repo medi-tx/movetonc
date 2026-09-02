@@ -1438,25 +1438,24 @@
         // ===== STORAGE METER =====
         const SUPA_FREE_QUOTA = 1024 * 1024 * 1024; // 1 GB free tier
         async function supaStorageUsage() {
-            // Returns { used, quota } from Supabase, or null if unavailable.
+            // Returns { used, quota } from Supabase, or null if the call failed.
             if (!supa) return null;
             try {
                 const client = supaClientWithSecret();
-                // Compute used bytes from all objects in the bucket.
                 let used = 0;
                 const paths = ['', 'videos/', 'clips/'];
+                let sawError = false;
                 for (const prefix of paths) {
                     const { data, error } = await client.storage.from(SUPA_BUCKET).list(prefix, { limit: 1000 });
-                    if (error) continue;
-                    for (const f of data) {
-                        if (typeof f.metadata === 'object' && f.metadata && f.metadata.size != null) {
-                            used += Number(f.metadata.size) || 0;
-                        } else if (typeof f.id === 'string') {
-                            // fallback: leave as 0
+                    if (error) { sawError = true; continue; }
+                    for (const f of data || []) {
+                        if (f && f.metadata && typeof f.metadata.size === 'number') {
+                            used += f.metadata.size;
                         }
                     }
                 }
-                if (used === 0) return null; // bucket empty -> show local instead
+                // If every folder errored, the bucket likely isn't reachable.
+                if (sawError && used === 0) return null;
                 return { used, quota: SUPA_FREE_QUOTA };
             } catch (e) {
                 console.warn('supaStorageUsage error', e);
@@ -1473,7 +1472,7 @@
                 // Prefer cloud usage when Supabase sync is enabled.
                 if (supa) {
                     const cloud = await supaStorageUsage();
-                    if (cloud && cloud.used > 0) {
+                    if (cloud) {
                         const pct = Math.min(100, Math.round(cloud.used / cloud.quota * 100));
                         fill.style.width = pct + '%';
                         text.textContent = formatBytes(cloud.used) + ' / 1 GB cloud';
