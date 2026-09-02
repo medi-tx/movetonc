@@ -113,6 +113,10 @@
         }
 
         .card p { color: #6b3a48; line-height: 1.5; white-space: pre-wrap; }
+        .card .cloud-pending {
+            display: inline-block; margin: 0.2rem 0.4rem 0 0; padding: 0.2rem 0.6rem;
+            background: #f3c1cb; color: #8f2d40; border-radius: 20px; font-size: 0.75rem;
+        }
         .card .card-actions { margin-top: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap; }
 
         .card video {
@@ -764,7 +768,9 @@
             return new Promise((resolve, reject) => {
                 const tx = db.transaction(STORE_NAME, 'readwrite');
                 tx.objectStore(STORE_NAME).put(blob, key);
-                tx.oncomplete = () => { uploadBlobToSupa(key, blob); resolve(); };
+                tx.oncomplete = async () => {
+                    try { await uploadBlobToSupa(key, blob); } finally { resolve(); }
+                };
                 tx.onerror = (e) => reject(e);
             });
         }
@@ -823,7 +829,9 @@
             return new Promise((resolve, reject) => {
                 const tx = db.transaction(CLIP_STORE, 'readwrite');
                 tx.objectStore(CLIP_STORE).put(blob, key);
-                tx.oncomplete = () => { uploadBlobToSupa(key, blob); resolve(); };
+                tx.oncomplete = async () => {
+                    try { await uploadBlobToSupa(key, blob); } finally { resolve(); }
+                };
                 tx.onerror = (e) => reject(e);
             });
         }
@@ -1438,6 +1446,9 @@
             }
 
             const editVideoBtn = v.videoKey ? `<a class="btn btn-success" href="https://www.capcut.com/my-edit?start_tab=video" target="_blank" rel="noopener">Edit in CapCut</a>` : '';
+            const pendingCloud = (isAdmin() && v.videoKey && remoteUploadedKeys.indexOf(v.videoKey) === -1)
+                ? '<span class="cloud-pending">Not synced to cloud yet</span>'
+                : '';
             const actionsHtml = isAdmin()
                 ? `<div class="card-actions">
                         <button class="btn btn-secondary" onclick="openModal('${v.id}')">Edit</button>
@@ -1451,6 +1462,7 @@
                     <div class="card-date">${formatDate(v.createdAt)}${v.updatedAt !== v.createdAt ? ' (edited)' : ''}</div>
                     <h3>${escapeHtml(v.title)}</h3>
                     ${v.mood ? `<span class="card-mood">${v.mood}</span>` : ''}
+                    ${pendingCloud}
                     ${videoHtml}
                     <p>${escapeHtml(v.content)}</p>
                     ${actionsHtml}
