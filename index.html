@@ -290,6 +290,18 @@
             cursor: pointer;
         }
         .tabs button.active { background: #efa3b4; color: #5a2e3a; border-color: #efa3b4; }
+        .tabs-static {
+            flex: 1;
+            padding: 0.5rem;
+            border: 1px solid #efa3b4;
+            border-radius: 6px;
+            background: #efa3b4;
+            color: #5a2e3a;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-align: center;
+            display: none;
+        }
 
         /* Dump ready indicator */
         .dump-ready {
@@ -365,6 +377,8 @@
         body.mode-view #adminHeader { display: none !important; }
         body.mode-view .tab-dump { display: none !important; }
         body.mode-view .tab-all { display: none !important; }
+        body.mode-view .tab-blog { display: none !important; }
+        body.mode-view .tabs-static { display: block; }
     </style>
 </head>
 <body>
@@ -404,7 +418,8 @@
     <div class="container">
         <div class="tabs" id="tabs">
             <button data-filter="all" class="tab-all" onclick="setFilter('all')">All</button>
-            <button data-filter="blog" onclick="setFilter('blog')">Entries</button>
+            <button data-filter="blog" class="tab-blog" onclick="setFilter('blog')">Entries</button>
+            <span class="tabs-static">Entries</span>
             <button data-filter="dump" class="tab-dump" onclick="setFilter('dump')">Clip Dumps</button>
         </div>
         <input type="text" id="searchBar" placeholder="Search entries..." oninput="renderAll()">
