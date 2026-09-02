@@ -9,40 +9,40 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #1a1a2e;
-            color: #eee;
+            background: #f1e7e1;
+            color: #5a2e3a;
             min-height: 100vh;
         }
 
         header {
-            background: #16213e;
+            background: #5a2e3a;
             padding: 1.5rem 2rem;
-            border-bottom: 2px solid #0f3460;
+            border-bottom: 3px solid #efa3b4;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        header h1 { font-size: 1.8rem; color: #e94560; }
+        header h1 { font-size: 1.8rem; color: #f1e7e1; }
 
         .btn {
             padding: 0.6rem 1.2rem;
-            border: none;
+            border: 1px solid transparent;
             border-radius: 6px;
             cursor: pointer;
             font-size: 0.95rem;
             font-weight: 600;
-            transition: background 0.2s;
+            transition: background 0.2s, border-color 0.2s;
         }
 
-        .btn-primary { background: #e94560; color: #fff; }
-        .btn-primary:hover { background: #c73650; }
-        .btn-secondary { background: #533483; color: #fff; }
-        .btn-secondary:hover { background: #6b44a0; }
-        .btn-danger { background: #c0392b; color: #fff; }
-        .btn-danger:hover { background: #a93226; }
-        .btn-success { background: #27ae60; color: #fff; }
-        .btn-success:hover { background: #219a52; }
+        .btn-primary { background: #efa3b4; color: #5a2e3a; }
+        .btn-primary:hover { background: #f3c1cb; }
+        .btn-secondary { background: #b8a6a8; color: #5a2e3a; }
+        .btn-secondary:hover { background: #a69498; }
+        .btn-danger { background: #8f2d40; color: #fff; }
+        .btn-danger:hover { background: #752436; }
+        .btn-success { background: #5a2e3a; color: #f1e7e1; border-color: #efa3b4; }
+        .btn-success:hover { background: #6e3447; }
 
         .container { max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
 
@@ -60,7 +60,8 @@
         .modal-overlay.active { display: flex; }
 
         .modal {
-            background: #16213e;
+            background: #fdf7f2;
+            border: 1px solid #b8a6a8;
             border-radius: 10px;
             padding: 2rem;
             width: 95%;
@@ -69,18 +70,18 @@
             overflow-y: auto;
         }
 
-        .modal h2 { margin-bottom: 1.5rem; color: #e94560; }
+        .modal h2 { margin-bottom: 1.5rem; color: #5a2e3a; }
 
         .form-group { margin-bottom: 1rem; }
-        .form-group label { display: block; margin-bottom: 0.4rem; font-weight: 600; color: #ccc; }
+        .form-group label { display: block; margin-bottom: 0.4rem; font-weight: 600; color: #5a2e3a; }
 
         .form-group input, .form-group textarea, .form-group select {
             width: 100%;
             padding: 0.7rem;
-            border: 1px solid #0f3460;
+            border: 1px solid #b8a6a8;
             border-radius: 6px;
-            background: #1a1a2e;
-            color: #eee;
+            background: #fff;
+            color: #5a2e3a;
             font-size: 0.95rem;
         }
 
@@ -90,27 +91,28 @@
         .list { display: flex; flex-direction: column; gap: 1rem; }
 
         .card {
-            background: #16213e;
+            background: #fdf7f2;
+            border: 1px solid #e3d3cc;
             border-radius: 10px;
             padding: 1.5rem;
-            border-left: 4px solid #e94560;
+            border-left: 4px solid #efa3b4;
             transition: transform 0.15s;
         }
 
         .card:hover { transform: translateY(-2px); }
-        .card .card-date { font-size: 0.8rem; color: #888; margin-bottom: 0.4rem; }
-        .card h3 { margin-bottom: 0.5rem; color: #fff; }
+        .card .card-date { font-size: 0.8rem; color: #b8a6a8; margin-bottom: 0.4rem; }
+        .card h3 { margin-bottom: 0.5rem; color: #5a2e3a; }
 
         .card .card-mood {
             display: inline-block;
-            background: #533483;
+            background: #f3c1cb;
             padding: 0.2rem 0.6rem;
             border-radius: 20px;
             font-size: 0.75rem;
             margin-bottom: 0.5rem;
         }
 
-        .card p { color: #bbb; line-height: 1.5; white-space: pre-wrap; }
+        .card p { color: #6b3a48; line-height: 1.5; white-space: pre-wrap; }
         .card .card-actions { margin-top: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap; }
 
         .card video {
@@ -121,24 +123,24 @@
             background: #000;
         }
 
-        .empty-state { text-align: center; padding: 4rem 1rem; color: #666; }
+        .empty-state { text-align: center; padding: 4rem 1rem; color: #b8a6a8; }
         .empty-state h2 { margin-bottom: 0.5rem; }
 
         #searchBar {
             width: 100%;
             padding: 0.7rem;
-            border: 1px solid #0f3460;
+            border: 1px solid #b8a6a8;
             border-radius: 6px;
-            background: #1a1a2e;
-            color: #eee;
+            background: #fff;
+            color: #5a2e3a;
             font-size: 0.95rem;
             margin-bottom: 1.5rem;
         }
 
-        #searchBar::placeholder { color: #666; }
+        #searchBar::placeholder { color: #b8a6a8; }
 
         .file-upload-area {
-            border: 2px dashed #0f3460;
+            border: 2px dashed #b8a6a8;
             border-radius: 8px;
             padding: 1.5rem;
             text-align: center;
@@ -147,7 +149,7 @@
             position: relative;
         }
 
-        .file-upload-area:hover { border-color: #e94560; }
+        .file-upload-area:hover { border-color: #efa3b4; }
 
         .file-upload-area input[type="file"] {
             position: absolute;
@@ -157,27 +159,27 @@
             cursor: pointer;
         }
 
-        .file-upload-area p { color: #888; margin: 0; }
-        .file-upload-area .file-name { color: #e94560; margin-top: 0.5rem; font-size: 0.85rem; }
+        .file-upload-area p { color: #8a6a74; margin: 0; }
+        .file-upload-area .file-name { color: #5a2e3a; margin-top: 0.5rem; font-size: 0.85rem; }
 
         .video-preview { margin-top: 0.8rem; }
         .video-preview video { width: 100%; max-height: 300px; border-radius: 8px; background: #000; }
 
         /* Clip Dump card */
-        .dump-card { border-left-color: #0fbb7c; }
+        .dump-card { border-left-color: #5a2e3a; }
         .dump-badge {
             display: inline-block;
-            background: #0fbb7c;
-            color: #fff;
+            background: #efa3b4;
+            color: #5a2e3a;
             padding: 0.2rem 0.6rem;
             border-radius: 20px;
             font-size: 0.75rem;
             margin-bottom: 0.5rem;
         }
-        .dump-clip-count { font-size: 0.8rem; color: #888; }
+        .dump-clip-count { font-size: 0.8rem; color: #b8a6a8; }
 
         .clipdump-area {
-            border: 2px dashed #0f3460;
+            border: 2px dashed #b8a6a8;
             border-radius: 8px;
             padding: 1rem;
             text-align: center;
@@ -187,7 +189,7 @@
             margin: 0.8rem 0;
         }
 
-        .clipdump-area:hover { border-color: #0fbb7c; }
+        .clipdump-area:hover { border-color: #efa3b4; }
 
         .clipdump-area input[type="file"] {
             position: absolute;
@@ -197,7 +199,7 @@
             cursor: pointer;
         }
 
-        .clipdump-area p { color: #888; margin: 0; }
+        .clipdump-area p { color: #8a6a74; margin: 0; }
         .clipdump-area .ma-icon { font-size: 1.4rem; margin-bottom: 0.2rem; }
 
         .clipdump-grid {
@@ -208,8 +210,8 @@
         }
 
         .clip-card {
-            background: #1a1a2e;
-            border: 1px solid #0f3460;
+            background: #fcf1ec;
+            border: 1px solid #b8a6a8;
             border-radius: 8px;
             overflow: hidden;
         }
@@ -226,7 +228,7 @@
 
         .clip-card .clip-name {
             font-size: 0.8rem;
-            color: #ddd;
+            color: #5a2e3a;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
@@ -235,7 +237,7 @@
 
         .clip-card .clip-date {
             font-size: 0.7rem;
-            color: #777;
+            color: #b8a6a8;
             margin-bottom: 0.5rem;
         }
 
@@ -249,12 +251,12 @@
 
         /* Storage meter */
         .storage-bar-wrap {
-            background: #1a1a2e;
-            border: 1px solid #0f3460;
+            background: #5a2e3a;
+            border: 1px solid #efa3b4;
             border-radius: 20px;
             padding: 0.3rem 0.9rem;
             font-size: 0.8rem;
-            color: #bbb;
+            color: #f1e7e1;
             display: flex;
             align-items: center;
             gap: 0.5rem;
@@ -262,38 +264,38 @@
         .storage-bar-wrap .bar {
             width: 70px;
             height: 8px;
-            background: #1a1a2e;
-            border: 1px solid #0f3460;
+            background: #5a2e3a;
+            border: 1px solid #f1e7e1;
             border-radius: 4px;
             overflow: hidden;
         }
         .storage-bar-wrap .bar > div {
             height: 100%;
-            background: #e94560;
+            background: #efa3b4;
             width: 0%;
         }
-        .storage-bar-wrap.warn { border-color: #e94560; color: #e94560; }
+        .storage-bar-wrap.warn { border: 2px solid #8f2d40; color: #8f2d40; }
 
         /* Filter tabs */
         .tabs { display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap; }
         .tabs button {
             flex: 1;
             padding: 0.5rem;
-            border: 1px solid #0f3460;
+            border: 1px solid #b8a6a8;
             border-radius: 6px;
-            background: #16213e;
-            color: #ccc;
+            background: #fdf7f2;
+            color: #5a2e3a;
             font-size: 0.9rem;
             font-weight: 600;
             cursor: pointer;
         }
-        .tabs button.active { background: #e94560; color: #fff; border-color: #e94560; }
+        .tabs button.active { background: #efa3b4; color: #5a2e3a; border-color: #efa3b4; }
 
         /* Dump ready indicator */
         .dump-ready {
             display: inline-block;
-            background: #27ae60;
-            color: #fff;
+            background: #5a2e3a;
+            color: #f1e7e1;
             padding: 0.2rem 0.6rem;
             border-radius: 20px;
             font-size: 0.75rem;
@@ -301,7 +303,7 @@
         }
         .dump-notready {
             display: inline-block;
-            background: #666;
+            background: #b8a6a8;
             color: #fff;
             padding: 0.2rem 0.6rem;
             border-radius: 20px;
@@ -315,9 +317,9 @@
             bottom: 1rem;
             left: 50%;
             transform: translateX(-50%);
-            background: #16213e;
-            border: 1px solid #0f3460;
-            color: #eee;
+            background: #5a2e3a;
+            border: 1px solid #efa3b4;
+            color: #f1e7e1;
             padding: 0.8rem 1.2rem;
             border-radius: 8px;
             z-index: 200;
@@ -328,7 +330,7 @@
         .lock-overlay {
             position: fixed;
             inset: 0;
-            background: #1a1a2e;
+            background: #5a2e3a;
             z-index: 500;
             display: flex;
             justify-content: center;
@@ -336,31 +338,32 @@
             padding: 1rem;
         }
         .lock-box {
-            background: #16213e;
-            border: 1px solid #0f3460;
+            background: #f1e7e1;
+            border: 2px solid #efa3b4;
             border-radius: 12px;
             padding: 2.5rem 2rem;
             width: 100%;
             max-width: 380px;
             text-align: center;
         }
-        .lock-box h1 { color: #e94560; margin-bottom: 0.4rem; font-size: 1.6rem; }
-        .lock-box p { color: #888; font-size: 0.9rem; margin-bottom: 1.5rem; }
+        .lock-box h1 { color: #5a2e3a; margin-bottom: 0.4rem; font-size: 1.6rem; }
+        .lock-box p { color: #8a6a74; font-size: 0.9rem; margin-bottom: 1.5rem; }
         .lock-box input {
             width: 100%;
             padding: 0.7rem;
-            border: 1px solid #0f3460;
+            border: 1px solid #b8a6a8;
             border-radius: 6px;
-            background: #1a1a2e;
-            color: #eee;
+            background: #fff;
+            color: #5a2e3a;
             font-size: 1rem;
             margin-bottom: 1rem;
             text-align: center;
         }
         .lock-box .lock-btns { display: flex; gap: 0.6rem; }
         .lock-box .btn { flex: 1; }
-        .lock-error { color: #e94560; font-size: 0.8rem; margin-bottom: 0.8rem; min-height: 1rem; }
+        .lock-error { color: #8f2d40; font-size: 0.8rem; margin-bottom: 0.8rem; min-height: 1rem; }
         body.mode-view #adminHeader { display: none !important; }
+        body.mode-view .tab-dump { display: none !important; }
     </style>
 </head>
 <body>
@@ -391,7 +394,8 @@
                 <button class="btn btn-secondary" onclick="openDumpModal()">+ New Clip Dump</button>
                 <button class="btn btn-primary" onclick="openModal()">+ New Entry</button>
             </span>
-            <a class="btn btn-success" href="https://www.capcut.com/my-edit?start_tab=video" target="_blank" rel="noopener">Edit in CapCut</a>
+<a class="btn btn-success" href="https://www.capcut.com/my-edit?start_tab=video" target="_blank" rel="noopener">Edit in CapCut</a>
+            <button class="btn btn-secondary" onclick="lockOut()" title="Return to password screen">Lock</button>
         </div>
     </header>
 
@@ -399,9 +403,9 @@
         <div class="tabs" id="tabs">
             <button data-filter="all" class="active" onclick="setFilter('all')">All</button>
             <button data-filter="blog" onclick="setFilter('blog')">Entries</button>
-            <button data-filter="dump" onclick="setFilter('dump')">Clip Dumps</button>
+            <button data-filter="dump" class="tab-dump" onclick="setFilter('dump')">Clip Dumps</button>
         </div>
-        <input type="text" id="searchBar" placeholder="Search entries &amp; clip dumps..." oninput="renderAll()">
+        <input type="text" id="searchBar" placeholder="Search entries..." oninput="renderAll()">
         <div id="list" class="list"></div>
     </div>
 
@@ -542,6 +546,12 @@
         function lockOut() {
             accessLevel = null;
             sessionStorage.removeItem('ncAccess');
+            document.body.classList.remove('mode-view');
+            document.getElementById('list').innerHTML = '';
+            document.getElementById('lockOverlay').style.display = '';
+            document.getElementById('lockPass').value = '';
+            document.getElementById('lockError').textContent = '';
+            setTimeout(() => document.getElementById('lockPass').focus(), 50);
         }
 
         function openDB() {
@@ -1157,7 +1167,7 @@
                     if (!query || hay.includes(query)) items.push({ type: 'vlog', item: v, date: new Date(v.createdAt) });
                 }
             }
-            if (currentFilter === 'all' || currentFilter === 'dump') {
+            if (isAdmin() && (currentFilter === 'all' || currentFilter === 'dump')) {
                 for (const d of clipDumps) {
                     const hay = (d.title + ' ' + d.clips.map(c => c.name).join(' ')).toLowerCase();
                     if (!query || hay.includes(query)) items.push({ type: 'dump', item: d, date: new Date(d.createdAt) });
@@ -1167,7 +1177,9 @@
 
             if (items.length === 0) {
                 const msg = (vlogs.length === 0 && clipDumps.length === 0)
-                    ? 'Click "+ New Entry" or "+ New Clip Dump" to start documenting your move to NC!'
+                    ? (isAdmin()
+                        ? 'Click "+ New Entry" or "+ New Clip Dump" to start documenting your move to NC!'
+                        : 'No vlog entries yet.')
                     : 'Try a different search or filter.';
                 container.innerHTML = `<div class="empty-state"><h2>${query ? 'No results found' : 'Nothing here yet'}</h2><p>${msg}</p></div>`;
                 return;
@@ -1379,6 +1391,10 @@
             if (accessLevel) {
                 document.getElementById('lockOverlay').style.display = 'none';
                 document.body.classList.toggle('mode-view', !isAdmin());
+                if (!isAdmin()) {
+                    currentFilter = 'all';
+                    document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('active', b.dataset.filter === 'all'));
+                }
             }
         }
 
