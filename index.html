@@ -1470,10 +1470,10 @@
             }
 
             localStorage.setItem('vlogs', JSON.stringify(vlogs));
-            await pushMetaToSupa();
             closeModal();
             renderAll();
             syncNow();
+            pushMetaToSupa();
         }
 
         async function deleteVlog(id) {
@@ -1889,11 +1889,15 @@
             if (!supa || syncing) return;
             try {
                 syncing = true;
+                // Pull cloud changes first so this device always gets fresh data,
+                // even if pushing/backfilling uploads takes a while.
+                await pullMetaFromSupa();
                 if (isAdmin()) {
                     await pushMetaToSupa();
-                    await backfillMissingBlobs();
+                    // Don't block a pull on a slow backfill; kick it off but
+                    // release the sync lock so the timer keeps working.
+                    backfillMissingBlobs();
                 }
-                await pullMetaFromSupa();
                 clipUrls = {};
                 videoObjectUrls = {};
                 renderAll();
