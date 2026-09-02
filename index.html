@@ -556,7 +556,7 @@
 
         // ===== CACHE BUSTING / VERSION CHECK =====
         // Bumped whenever the site is updated so stale pages auto-reload once.
-        const APP_VERSION = 'v12';
+        const APP_VERSION = 'v13';
 
         // Auto-reload once if the served version differs from what this browser last ran.
         // (Skips reload on a brand-new browser, where there's nothing cached to bust.)
@@ -1375,6 +1375,12 @@
                     </div>`
                 : '';
 
+            const ytActionsHtml = isView() && v.youtube
+                ? `<div class="card-actions yt-actions">
+                        <a class="btn btn-danger study-action" href="${escapeHtml(v.youtube)}" target="_blank" rel="noopener">Watch on YouTube</a>
+                    </div>`
+                : '';
+
             return `
                 <div class="card">
                     <div class="card-date">${formatDate(v.createdAt)}${v.updatedAt !== v.createdAt ? ' (edited)' : ''}</div>
@@ -1383,6 +1389,7 @@
                     ${videoHtml}
                     <p>${escapeHtml(v.content)}</p>
                     ${actionsHtml}
+                    ${ytActionsHtml}
                 </div>
             `;
         }
