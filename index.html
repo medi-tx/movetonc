@@ -387,7 +387,7 @@
         <h1>My Move to NC</h1>
         <div style="display:flex; gap:0.6rem; flex-wrap:wrap; align-items:center;">
             <span id="adminHeader" style="display:contents;">
-                <span class="storage-bar-wrap" id="storageBar" title="Amount of browser storage used">
+                <span class="storage-bar-wrap" id="storageBar" title="Cloud (Supabase) storage used - free tier is 1 GB">
                     <span class="bar"><div id="storageFill"></div></span>
                     <span id="storageText">--</span>
                 </span>
@@ -1436,20 +1436,59 @@
         }
 
         // ===== STORAGE METER =====
-        async function updateStorageMeter() {
+        const SUPA_FREE_QUOTA = 1024 * 1024 * 1024; // 1 GB free tier
+        async function supaStorageUsage() {
+            // Returns { used, quota } from Supabase, or null if unavailable.
+            if (!supa) return null;
             try {
+                const client = supaClientWithSecret();
+                // Compute used bytes from all objects in the bucket.
+                let used = 0;
+                const paths = ['', 'videos/', 'clips/'];
+                for (const prefix of paths) {
+                    const { data, error } = await client.storage.from(SUPA_BUCKET).list(prefix, { limit: 1000 });
+                    if (error) continue;
+                    for (const f of data) {
+                        if (typeof f.metadata === 'object' && f.metadata && f.metadata.size != null) {
+                            used += Number(f.metadata.size) || 0;
+                        } else if (typeof f.id === 'string') {
+                            // fallback: leave as 0
+                        }
+                    }
+                }
+                if (used === 0) return null; // bucket empty -> show local instead
+                return { used, quota: SUPA_FREE_QUOTA };
+            } catch (e) {
+                console.warn('supaStorageUsage error', e);
+                return null;
+            }
+        }
+
+        async function updateStorageMeter() {
+            const wrap = document.getElementById('storageBar');
+            const fill = document.getElementById('storageFill');
+            const text = document.getElementById('storageText');
+            if (!wrap || !fill || !text) return;
+            try {
+                // Prefer cloud usage when Supabase sync is enabled.
+                if (supa) {
+                    const cloud = await supaStorageUsage();
+                    if (cloud && cloud.used > 0) {
+                        const pct = Math.min(100, Math.round(cloud.used / cloud.quota * 100));
+                        fill.style.width = pct + '%';
+                        text.textContent = formatBytes(cloud.used) + ' / 1 GB cloud';
+                        wrap.classList.toggle('warn', pct > 80);
+                        return;
+                    }
+                }
+                // Fallback: local browser storage estimate.
                 if (!navigator.storage || !navigator.storage.estimate) return;
                 const { usage, quota } = await navigator.storage.estimate();
                 if (!usage && !quota) return;
                 const pct = quota ? Math.min(100, Math.round(usage / quota * 100)) : 0;
-                const wrap = document.getElementById('storageBar');
-                const fill = document.getElementById('storageFill');
-                const text = document.getElementById('storageText');
-                if (wrap && fill && text) {
-                    fill.style.width = pct + '%';
-                    text.textContent = formatBytes(usage) + ' / ' + formatBytes(quota);
-                    wrap.classList.toggle('warn', pct > 80);
-                }
+                fill.style.width = pct + '%';
+                text.textContent = formatBytes(usage) + ' / local';
+                wrap.classList.toggle('warn', pct > 80);
             } catch (e) { /* ignore */ }
         }
 
