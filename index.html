@@ -311,15 +311,6 @@
             margin-left: 0.4rem;
             cursor: pointer;
         }
-        .dump-songready {
-            display: inline-block;
-            background: #b8a6a8;
-            color: #fff;
-            padding: 0.2rem 0.6rem;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            margin-left: 0.4rem;
-        }
 
         .toast {
             position: fixed;
@@ -923,16 +914,6 @@
             }
         }
 
-        function toggleDumpSongReady(dumpId) {
-            const dump = getDump(dumpId);
-            if (dump) {
-                dump.songReady = !dump.songReady;
-                localStorage.setItem('clipDumps', JSON.stringify(clipDumps));
-                pushMetaToSupa();
-                renderAll();
-            }
-        }
-
         function dumpCardHtml(dump) {
             const count = dump.clips.length;
             const admin = isAdmin();
@@ -962,17 +943,12 @@
                 ? `<span class="dump-ready" title="Marked ready to edit">&#9989; Ready to edit</span>`
                 : (admin ? `<span class="dump-notready" onclick="toggleDumpReady('${dump.id}')" title="Click to mark this dump ready to edit/download">Not ready</span>` : '');
 
-            const songReadyHtml = dump.songReady
-                ? `<span class="dump-songready" title="Marked song ready">&#127925; Song ready</span>`
-                : '';
-
             const dtionsHtml = admin
                 ? `<div class="card-actions">
                         <button class="btn btn-success" onclick="downloadDumpZip('${dump.id}')">Download as ZIP</button>
                         <button class="btn btn-secondary" onclick="downloadDumpAll('${dump.id}')">Download All</button>
                         <button class="btn btn-secondary" onclick="openDumpModal('${dump.id}')">Rename</button>
                         ${dump.ready ? `<button class="btn btn-secondary" onclick="toggleDumpReady('${dump.id}')">Mark Not Ready</button>` : `<button class="btn btn-secondary" onclick="toggleDumpReady('${dump.id}')">Mark Ready</button>`}
-                        ${dump.songReady ? `<button class="btn btn-secondary" onclick="toggleDumpSongReady('${dump.id}')">Mark Not Song Ready</button>` : `<button class="btn btn-secondary" onclick="toggleDumpSongReady('${dump.id}')">Mark Song Ready</button>`}
                         <button class="btn btn-danger" onclick="deleteDump('${dump.id}')">Delete Dump Set</button>
                     </div>`
                 : '';
@@ -990,7 +966,6 @@
                     <div class="card-date">${formatDate(dump.createdAt)}</div>
                     <h3>&#127909; ${escapeHtml(dump.title)}
                         ${readyHtml}
-                        ${songReadyHtml}
                     </h3>
                     <span class="dump-badge">Clip Dump</span>
                     <span class="dump-clip-count">${count} clip${count === 1 ? '' : 's'}</span>
