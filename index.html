@@ -397,6 +397,8 @@
         body.mode-view .tabs-static { display: block; }
         body.mode-view .capcut-link { display: none !important; }
         body.mode-view .studio-link { display: none !important; }
+        .viewer-only { display: none !important; }
+        body.mode-view .viewer-only { display: inline-block !important; }
     </style>
 </head>
 <body>
@@ -429,6 +431,7 @@
             </span>
 <a class="btn btn-success capcut-link" href="https://www.capcut.com/my-edit?start_tab=video" target="_blank" rel="noopener">Edit in CapCut</a>
             <a class="btn btn-danger studio-link" href="https://studio.youtube.com/channel/UCb4eQdNSsl8_-9MtpeA5Jjw/videos/upload?" target="_blank" rel="noopener" title="Post your vlogs to YouTube">YouTube Studio</a>
+            <a class="btn btn-danger viewer-only" href="https://youtube.com/playlist?list=PLI6YU869pdj8" target="_blank" rel="noopener" title="Open the full vlog playlist on YouTube">Watch on YouTube</a>
             <button class="btn btn-secondary" onclick="lockOut()" title="Return to password screen">Lock</button>
         </div>
     </header>
@@ -556,7 +559,7 @@
 
         // ===== CACHE BUSTING / VERSION CHECK =====
         // Bumped whenever the site is updated so stale pages auto-reload once.
-        const APP_VERSION = 'v13';
+        const APP_VERSION = 'v14';
 
         // Auto-reload once if the served version differs from what this browser last ran.
         // (Skips reload on a brand-new browser, where there's nothing cached to bust.)
