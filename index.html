@@ -204,6 +204,15 @@
         }
         .dump-clip-count { font-size: 0.8rem; color: #b8a6a8; }
 
+        .type-toggle { display: flex; gap: 0.5rem; }
+        .type-btn {
+            flex: 1; padding: 0.55rem; border: 1px solid #d8c3c9; border-radius: 8px;
+            background: #fdf7f2; color: #5a2e3a; font-weight: 600; cursor: pointer;
+        }
+        .type-btn.active { background: #efa3b4; color: #5a2e3a; border-color: #efa3b4; }
+
+        .clip-card img { width: 100%; aspect-ratio: 4/3; object-fit: cover; border-radius: 6px; background: #000; display: block; }
+
         .clipdump-area {
             border: 2px dashed #b8a6a8;
             border-radius: 8px;
@@ -437,7 +446,6 @@
                 <button class="btn btn-primary" onclick="openModal()">+ New Entry</button>
             </span>
 <a class="btn btn-success capcut-link" href="https://www.capcut.com/my-edit?start_tab=video" target="_blank" rel="noopener">Edit in CapCut</a>
-            <button class="btn btn-secondary" onclick="doSync()" title="Pull latest from the cloud">Sync</button>
             <button class="btn btn-secondary" onclick="lockOut()" title="Return to password screen">Lock</button>
         </div>
     </header>
@@ -447,7 +455,7 @@
             <button data-filter="all" class="tab-all" onclick="setFilter('all')">All</button>
             <button data-filter="blog" class="tab-blog" onclick="setFilter('blog')">Entries</button>
             <span class="tabs-static">Entries</span>
-            <button data-filter="dump" class="tab-dump" onclick="setFilter('dump')">Clip Dumps</button>
+            <button data-filter="dump" class="tab-dump" onclick="setFilter('dump')">Clip/Photo Dumps</button>
         </div>
         <input type="text" id="searchBar" placeholder="Search entries..." oninput="renderAll()">
         <div id="list" class="list"></div>
@@ -505,20 +513,37 @@
     <!-- Create/Edit Clip Dump Modal -->
     <div class="modal-overlay" id="dumpModal">
         <div class="modal">
-            <h2 id="dumpModalTitle">New Clip Dump</h2>
+            <h2 id="dumpModalTitle">New Clip/Photo Dump</h2>
             <input type="hidden" id="dumpEditId">
             <div class="form-group">
                 <label for="dumpTitle">Name</label>
                 <input type="text" id="dumpTitle" placeholder="e.g. Trailer park clips, House hunting b-roll..." required>
             </div>
-            <div id="dumpCreateFields">
+<div id="dumpCreateFields">
                 <div class="form-group">
+                    <label>What are you adding?</label>
+                    <div class="type-toggle">
+                        <button type="button" class="type-btn type-clip active" onclick="setDumpType('clip')">&#127916; Clips</button>
+                        <button type="button" class="type-btn type-photo" onclick="setDumpType('photo')">&#128247; Photos</button>
+                    </div>
+                </div>
+                <div class="form-group" id="dumpClipField">
                     <label>Clips</label>
                     <div class="file-upload-area" id="dumpFileArea">
                         <p>Click or drag video files here (select multiple)</p>
                         <div class="file-name" id="dumpFileName"></div>
-                        <input type="file" id="dumpFiles" accept="video/*" multiple onchange="handleDumpModalFiles(event)" required>
+                        <input type="file" id="dumpFiles" accept="video/*" multiple onchange="handleDumpModalFiles(event)">
                     </div>
+                </div>
+                <div class="form-group" id="dumpPhotoField" style="display:none">
+                    <label>Photos</label>
+                    <div class="file-upload-area" id="dumpPhotoFileArea">
+                        <p>Click or drag image files here (select multiple)</p>
+                        <div class="file-name" id="dumpPhotoFileName"></div>
+                        <input type="file" id="dumpPhotoFiles" accept="image/*" multiple onchange="handleDumpModalFiles(event)">
+                    </div>
+                </div>
+            </div>
                 </div>
                 <p style="color:#888; font-size:0.85rem; margin-bottom:1rem;">A clip dump is a post you can add clips to over time. Later you'll download all its clips to edit in CapCut on your laptop.</p>
             </div>
@@ -590,6 +615,7 @@
         let clipDumps = JSON.parse(localStorage.getItem('clipDumps') || '[]');
         let clipUrls = {};
         let dumpModalFiles = [];
+        let dumpModalType = 'clip';
         let currentVideoBlob = null;
         let currentEditVideoKey = null;
         let currentVideoFileName = null;
@@ -620,7 +646,7 @@
             document.getElementById('lockOverlay').style.display = 'none';
             document.body.classList.toggle('mode-view', !isAdmin());
             if (db) renderAll();
-            if (SUPA_ENABLED) syncFromSupa();
+            if (SUPA_ENABLED) autoSync();
         }
 
         function lockOut() {
@@ -863,21 +889,41 @@
         }
 
         /* ===== CLIP DUMP MODAL ===== */
+        function setDumpType(type) {
+            dumpModalType = type;
+            document.getElementById('dumpClipField').style.display = type === 'clip' ? '' : 'none';
+            document.getElementById('dumpPhotoField').style.display = type === 'photo' ? '' : 'none';
+            document.querySelectorAll('.type-btn').forEach(b => {
+                b.classList.toggle('active', b.classList.contains('type-' + type));
+            });
+            document.getElementById('dumpFiles').value = '';
+            document.getElementById('dumpPhotoFiles').value = '';
+            document.getElementById('dumpFileName').textContent = '';
+            document.getElementById('dumpPhotoFileName').textContent = '';
+            dumpModalFiles = [];
+        }
+
         function openDumpModal(dumpId) {
             if (!isAdmin()) return;
             document.getElementById('dumpModal').classList.add('active');
+            dumpModalType = 'clip';
+            document.querySelectorAll('.type-btn').forEach(b => b.classList.toggle('active', b.classList.contains('type-clip')));
+            document.getElementById('dumpClipField').style.display = '';
+            document.getElementById('dumpPhotoField').style.display = 'none';
             document.getElementById('dumpFiles').value = '';
+            document.getElementById('dumpPhotoFiles').value = '';
             document.getElementById('dumpFileName').textContent = '';
+            document.getElementById('dumpPhotoFileName').textContent = '';
             dumpModalFiles = [];
             const editId = dumpId ? dumpId : '';
             document.getElementById('dumpEditId').value = editId;
             if (editId) {
                 const dump = getDump(editId);
-                document.getElementById('dumpModalTitle').textContent = 'Edit Clip Dump';
+                document.getElementById('dumpModalTitle').textContent = 'Edit Clip/Photo Dump';
                 document.getElementById('dumpTitle').value = dump ? dump.title : '';
                 document.getElementById('dumpCreateFields').style.display = 'none';
             } else {
-                document.getElementById('dumpModalTitle').textContent = 'New Clip Dump';
+                document.getElementById('dumpModalTitle').textContent = 'New Clip/Photo Dump';
                 document.getElementById('dumpTitle').value = '';
                 document.getElementById('dumpCreateFields').style.display = 'block';
             }
@@ -887,10 +933,17 @@
 
         function handleDumpModalFiles(event) {
             const files = Array.from(event.target.files || []);
-            dumpModalFiles = files.filter(f => f && f.type.indexOf('video') !== -1);
-            document.getElementById('dumpFileName').textContent = dumpModalFiles.length
-                ? dumpModalFiles.length + ' clip(s): ' + dumpModalFiles.map(f => f.name).join(', ')
-                : '';
+            if (dumpModalType === 'photo') {
+                dumpModalFiles = files.filter(f => f && f.type.indexOf('image') !== -1);
+                document.getElementById('dumpPhotoFileName').textContent = dumpModalFiles.length
+                    ? dumpModalFiles.length + ' photo(s): ' + dumpModalFiles.map(f => f.name).join(', ')
+                    : '';
+            } else {
+                dumpModalFiles = files.filter(f => f && f.type.indexOf('video') !== -1);
+                document.getElementById('dumpFileName').textContent = dumpModalFiles.length
+                    ? dumpModalFiles.length + ' clip(s): ' + dumpModalFiles.map(f => f.name).join(', ')
+                    : '';
+            }
         }
 
         function saveDumpModal() {
@@ -918,17 +971,17 @@
 
         async function createDump() {
             const title = document.getElementById('dumpTitle').value.trim();
-            if (!title) { alert('Please give this clip dump a name.'); return; }
-            if (dumpModalFiles.length === 0) { alert('Please add at least one clip before creating the dump.'); return; }
-            const dump = { id: 'dump_' + Date.now(), title, createdAt: new Date().toISOString(), ready: false, clips: [] };
+            if (!title) { alert('Please give this dump a name.'); return; }
+            if (dumpModalFiles.length === 0) { alert('Please add at least one clip or photo before creating the dump.'); return; }
+            const dump = { id: 'dump_' + Date.now(), title, createdAt: new Date().toISOString(), ready: false, type: dumpModalType, clips: [] };
             for (const file of dumpModalFiles) {
-                const clipId = 'clip_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
-                const key = dump.id + '::' + clipId;
+                const itemId = 'clip_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+                const key = dump.id + '::' + itemId;
                 try {
                     await saveClipBlob(key, file);
-                    dump.clips.unshift({ id: clipId, key, name: file.name, size: file.size, date: new Date().toISOString() });
+                    dump.clips.unshift({ id: itemId, key, name: file.name, size: file.size, date: new Date().toISOString(), isPhoto: dumpModalType === 'photo' });
                 } catch (err) {
-                    console.error('Failed to save clip', file.name, err);
+                    console.error('Failed to save item', file.name, err);
                 }
             }
             clipDumps.unshift(dump);
@@ -936,7 +989,7 @@
             await pushMetaToSupa();
             closeDumpModal();
             renderAll();
-            if (dump.clips.length > 0) alert('Created "' + dump.title + '" with ' + dump.clips.length + ' clip(s).');
+            if (dump.clips.length > 0) alert('Created "' + dump.title + '" with ' + dump.clips.length + ' item(s).');
         }
 
         /* ===== CLIP DUMP HELPERS ===== */
@@ -948,21 +1001,22 @@
             if (!dump) return;
             const added = [];
             for (const file of files) {
-                if (!file || file.type.indexOf('video') === -1) continue;
-                const clipId = 'clip_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
-                const key = dumpId + '::' + clipId;
+                const isPhoto = file && file.type.indexOf('image') === 0;
+                if (!file || (file.type.indexOf('video') === -1 && !isPhoto)) continue;
+                const itemId = 'clip_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+                const key = dumpId + '::' + itemId;
                 try {
                     await saveClipBlob(key, file);
-                    dump.clips.unshift({ id: clipId, key, name: file.name, size: file.size, date: new Date().toISOString() });
+                    dump.clips.unshift({ id: itemId, key, name: file.name, size: file.size, date: new Date().toISOString(), isPhoto: isPhoto });
                     added.push(file.name);
                 } catch (err) {
-                    console.error('Failed to save clip', file.name, err);
+                    console.error('Failed to save item', file.name, err);
                 }
             }
             localStorage.setItem('clipDumps', JSON.stringify(clipDumps));
             await pushMetaToSupa();
             renderAll();
-            if (added.length > 0) alert('Added ' + added.length + ' clip(s) to "' + dump.title + '".');
+            if (added.length > 0) alert('Added ' + added.length + ' item(s) to "' + dump.title + '".');
         }
 
         async function downloadDumpAll(dumpId) {
@@ -1037,9 +1091,15 @@
                             <button class="btn btn-danger" onclick="deleteClip('${dump.id}','${clip.id}')">Delete</button>
                         </div>`
                     : '';
+                let mediaHtml;
+                if (clip.isPhoto) {
+                    mediaHtml = `<img src="" alt="${escapeHtml(clip.name)}" data-imgkey="${urlKey}">`;
+                } else {
+                    mediaHtml = `<video src="" muted preload="metadata" data-urlkey="${urlKey}"></video>`;
+                }
                 clipsHtml += `
                     <div class="clip-card">
-                        <video src="" muted preload="metadata" data-urlkey="${urlKey}"></video>
+                        ${mediaHtml}
                         <div class="clip-info">
                             <div class="clip-name" title="${escapeHtml(clip.name)}">${escapeHtml(clip.name)}</div>
                             <div class="clip-date">${formatDate(clip.date)} &middot; ${sizeMB} MB</div>
@@ -1066,10 +1126,12 @@
             const addAreaHtml = admin
                 ? `<div class="clipdump-area" data-dump="${dump.id}">
                         <div class="ma-icon">&#127916;</div>
-                        <p>Click or drop to add clips (select multiple)</p>
-                        <input type="file" accept="video/*" multiple onchange="handleDumpFilesFromInput(event, '${dump.id}')">
+                        <p>Click or drop to add clips/photos (select multiple)</p>
+                        <input type="file" accept="video/*,image/*" multiple onchange="handleDumpFilesFromInput(event, '${dump.id}')">
                     </div>`
                 : '';
+
+            const photoCount = dump.clips.filter(c => c.isPhoto).length;
 
             return `
                 <div class="card dump-card">
@@ -1077,11 +1139,11 @@
                     <h3>&#127909; ${escapeHtml(dump.title)}
                         ${readyHtml}
                     </h3>
-                    <span class="dump-badge">Clip Dump</span>
-                    <span class="dump-clip-count">${count} clip${count === 1 ? '' : 's'}</span>
+                    <span class="dump-badge">${dump.type === 'photo' ? 'Photo Dump' : 'Clip Dump'}</span>
+                    <span class="dump-clip-count">${count} ${dump.type === 'photo' ? 'photo' : 'clip'}${count === 1 ? '' : 's'}</span>
                     ${dtionsHtml}
                     ${addAreaHtml}
-                    ${count === 0 ? `<p style="color:#666; font-size:0.85rem; text-align:center; padding:0.5rem 0;">No clips in this dump yet.</p>` : ''}
+                    ${count === 0 ? `<p style="color:#666; font-size:0.85rem; text-align:center; padding:0.5rem 0;">No items in this dump yet.</p>` : ''}
                     <div class="clipdump-grid">${clipsHtml}</div>
                 </div>
             `;
@@ -1106,6 +1168,12 @@
                 } else {
                     video.src = clipUrls[urlKey];
                 }
+            });
+            root.querySelectorAll('.clip-card img[data-imgkey]').forEach(img => {
+                const urlKey = img.getAttribute('data-imgkey');
+                getClipBlobOrRemote(urlKey).then(blob => {
+                    if (blob && img.isConnected) img.src = URL.createObjectURL(blob);
+                });
             });
         }
 
@@ -1785,7 +1853,8 @@
                 handleDumpFiles(dumpId, Array.from(e.dataTransfer.files));
                 return;
             }
-            const modalArea = e.target.closest && e.target.closest('#dumpFileArea');
+            const modalArea = e.target.closest && e.target.closest('#dumpClipField');
+            const photoModalArea = e.target.closest && e.target.closest('#dumpPhotoField');
             if (modalArea) {
                 e.preventDefault();
                 modalArea.style.borderColor = '#efa3b4';
@@ -1793,6 +1862,15 @@
                 dumpModalFiles = dumpModalFiles.concat(files);
                 document.getElementById('dumpFileName').textContent = dumpModalFiles.length
                     ? dumpModalFiles.length + ' clip(s): ' + dumpModalFiles.map(f => f.name).join(', ')
+                    : '';
+            }
+            if (photoModalArea) {
+                e.preventDefault();
+                photoModalArea.style.borderColor = '#efa3b4';
+                const files = Array.from(e.dataTransfer.files).filter(f => f && f.type.indexOf('image') !== -1);
+                dumpModalFiles = dumpModalFiles.concat(files);
+                document.getElementById('dumpPhotoFileName').textContent = dumpModalFiles.length
+                    ? dumpModalFiles.length + ' photo(s): ' + dumpModalFiles.map(f => f.name).join(', ')
                     : '';
             }
         });
@@ -1805,32 +1883,24 @@
             setTimeout(() => { if (t.parentNode) t.parentNode.removeChild(t); }, ms || 2500);
         }
 
-        async function syncFromSupa() {
-            if (!supa) return false;
-            const before = Date.now();
+        async function autoSync() {
+            if (!supa || syncing) return;
             try {
-                if (syncing) return false;
                 syncing = true;
-                const pulled = await pullMetaFromSupa();
-                if (isAdmin()) await backfillMissingBlobs();
+                if (isAdmin()) {
+                    await pushMetaToSupa();
+                    await backfillMissingBlobs();
+                }
+                await pullMetaFromSupa();
                 clipUrls = {};
                 videoObjectUrls = {};
                 renderAll();
-                return pulled;
+            } catch (e) {
+                console.warn('autoSync error', e);
             } finally {
                 syncing = false;
-                setTimeout(() => { if (document.getElementById('storageText') && before) updateStorageMeter(); }, 3000);
+                updateStorageMeter();
             }
-        }
-
-        async function doSync() {
-            if (!SUPA_ENABLED) { toast('Cloud sync not configured. Set SUPA_URL to enable.'); return; }
-            if (isAdmin()) {
-                await pushMetaToSupa();
-                await backfillMissingBlobs();
-            }
-            const pulled = await syncFromSupa();
-            toast(pulled ? 'Synced latest from the cloud.' : 'Synced. Nothing new in the cloud.');
         }
 
         function applyAccessUI() {
@@ -1847,13 +1917,19 @@
         applyAccessUI();
         openDB().then(async () => {
             if (SUPA_ENABLED && accessLevel !== null) {
-                await syncFromSupa();
+                await autoSync();
             }
             if (accessLevel !== null && document.getElementById('lockOverlay').style.display === 'none') {
                 renderAll();
             }
             updateStorageMeter();
         });
+
+        if (SUPA_ENABLED) {
+            setInterval(() => { if (accessLevel !== null) autoSync(); }, 30000);
+            window.addEventListener('online', () => { if (accessLevel !== null) autoSync(); });
+            window.addEventListener('focus', () => { if (accessLevel !== null) autoSync(); });
+        }
     </script>
 </body>
 </html>
