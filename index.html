@@ -87,9 +87,9 @@
         .form-group textarea { resize: vertical; min-height: 120px; }
         .form-actions { display: flex; gap: 0.8rem; margin-top: 1.5rem; }
 
-        .vlog-list { display: flex; flex-direction: column; gap: 1rem; }
+        .list { display: flex; flex-direction: column; gap: 1rem; }
 
-        .vlog-card {
+        .card {
             background: #16213e;
             border-radius: 10px;
             padding: 1.5rem;
@@ -97,11 +97,11 @@
             transition: transform 0.15s;
         }
 
-        .vlog-card:hover { transform: translateY(-2px); }
-        .vlog-card .vlog-date { font-size: 0.8rem; color: #888; margin-bottom: 0.4rem; }
-        .vlog-card h3 { margin-bottom: 0.5rem; color: #fff; }
+        .card:hover { transform: translateY(-2px); }
+        .card .card-date { font-size: 0.8rem; color: #888; margin-bottom: 0.4rem; }
+        .card h3 { margin-bottom: 0.5rem; color: #fff; }
 
-        .vlog-card .vlog-mood {
+        .card .card-mood {
             display: inline-block;
             background: #533483;
             padding: 0.2rem 0.6rem;
@@ -110,10 +110,10 @@
             margin-bottom: 0.5rem;
         }
 
-        .vlog-card p { color: #bbb; line-height: 1.5; white-space: pre-wrap; }
-        .vlog-card .vlog-actions { margin-top: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .card p { color: #bbb; line-height: 1.5; white-space: pre-wrap; }
+        .card .card-actions { margin-top: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap; }
 
-        .vlog-card video {
+        .card video {
             width: 100%;
             max-height: 400px;
             border-radius: 8px;
@@ -163,44 +163,31 @@
         .video-preview { margin-top: 0.8rem; }
         .video-preview video { width: 100%; max-height: 300px; border-radius: 8px; background: #000; }
 
-        /* Clip Dump */
-        .clipdump-section {
-            background: #16213e;
-            border-radius: 10px;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-            border: 1px solid #0f3460;
+        /* Clip Dump card */
+        .dump-card { border-left-color: #0fbb7c; }
+        .dump-badge {
+            display: inline-block;
+            background: #0fbb7c;
+            color: #fff;
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            margin-bottom: 0.5rem;
         }
-
-        .clipdump-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 0.8rem;
-            margin-bottom: 1rem;
-        }
-
-        .clipdump-header h2 { color: #e94560; font-size: 1.3rem; }
-
-        .clipdump-hint {
-            font-size: 0.8rem;
-            color: #888;
-            margin-bottom: 1rem;
-        }
+        .dump-clip-count { font-size: 0.8rem; color: #888; }
 
         .clipdump-area {
             border: 2px dashed #0f3460;
             border-radius: 8px;
-            padding: 1.5rem;
+            padding: 1rem;
             text-align: center;
             cursor: pointer;
             transition: border-color 0.2s;
             position: relative;
-            margin-bottom: 1.2rem;
+            margin: 0.8rem 0;
         }
 
-        .clipdump-area:hover { border-color: #e94560; }
+        .clipdump-area:hover { border-color: #0fbb7c; }
 
         .clipdump-area input[type="file"] {
             position: absolute;
@@ -211,12 +198,13 @@
         }
 
         .clipdump-area p { color: #888; margin: 0; }
-        .clipdump-area .ma-icon { font-size: 1.8rem; margin-bottom: 0.3rem; }
+        .clipdump-area .ma-icon { font-size: 1.4rem; margin-bottom: 0.2rem; }
 
         .clipdump-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
             gap: 0.8rem;
+            margin-top: 0.5rem;
         }
 
         .clip-card {
@@ -234,9 +222,7 @@
             display: block;
         }
 
-        .clip-card .clip-info {
-            padding: 0.6rem;
-        }
+        .clip-card .clip-info { padding: 0.6rem; }
 
         .clip-card .clip-name {
             font-size: 0.8rem;
@@ -253,10 +239,7 @@
             margin-bottom: 0.5rem;
         }
 
-        .clip-card .clip-actions {
-            display: flex;
-            gap: 0.4rem;
-        }
+        .clip-card .clip-actions { display: flex; gap: 0.4rem; }
 
         .clip-card .clip-actions .btn {
             padding: 0.4rem 0.7rem;
@@ -272,33 +255,14 @@
         <h1>My Move to NC</h1>
         <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
             <a class="btn btn-success" href="https://www.capcut.com/my-edit?start_tab=video" target="_blank" rel="noopener">Edit in CapCut</a>
+            <button class="btn btn-secondary" onclick="openDumpModal()">+ New Clip Dump</button>
             <button class="btn btn-primary" onclick="openModal()">+ New Entry</button>
         </div>
     </header>
 
     <div class="container">
-        <!-- Clip Dump -->
-        <div class="clipdump-section">
-            <div class="clipdump-header">
-                <h2>&#127909; Clip Dump</h2>
-                <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
-                    <button class="btn btn-secondary" onclick="downloadAllClips()">Download All</button>
-                    <a class="btn btn-success" href="https://www.capcut.com/my-edit?start_tab=video" target="_blank" rel="noopener">Go to CapCut</a>
-                </div>
-            </div>
-            <p class="clipdump-hint">Dump all your raw clips here to edit later. Add several at once, and add more anytime. CapCut can't auto-load your files, so use "Download All" to save them, then upload them in CapCut.</p>
-
-            <div class="clipdump-area" id="clipdumpArea">
-                <div class="ma-icon">&#127916;</div>
-                <p>Click or drop to add clips (you can select multiple)</p>
-                <input type="file" id="clipdumpFile" accept="video/*" multiple onchange="handleClipDump(event)">
-            </div>
-
-            <div id="clipdumpGrid" class="clipdump-grid"></div>
-        </div>
-
-        <input type="text" id="searchBar" placeholder="Search vlogs..." oninput="renderVlogs()">
-        <div id="vlogList" class="vlog-list"></div>
+        <input type="text" id="searchBar" placeholder="Search entries &amp; clip dumps..." oninput="renderAll()">
+        <div id="list" class="list"></div>
     </div>
 
     <!-- Create/Edit Vlog Modal -->
@@ -344,6 +308,22 @@
         </div>
     </div>
 
+    <!-- Create Clip Dump Modal -->
+    <div class="modal-overlay" id="dumpModal">
+        <div class="modal">
+            <h2>New Clip Dump</h2>
+            <div class="form-group">
+                <label for="dumpTitle">Name (optional)</label>
+                <input type="text" id="dumpTitle" placeholder="e.g. Trailer park clips, House hunting b-roll...">
+            </div>
+            <p style="color:#888; font-size:0.85rem; margin-bottom:1rem;">A clip dump is a post you can add clips to over time. Later you'll download all its clips to edit in CapCut on your laptop.</p>
+            <div class="form-actions">
+                <button class="btn btn-primary" onclick="createDump()">Create</button>
+                <button class="btn btn-secondary" onclick="closeDumpModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const DB_NAME = 'VlogDB';
         const DB_VERSION = 2;
@@ -351,7 +331,7 @@
         const CLIP_STORE = 'clips';
         let db = null;
         let vlogs = JSON.parse(localStorage.getItem('vlogs') || '[]');
-        let clipDump = JSON.parse(localStorage.getItem('clipDump') || '[]');
+        let clipDumps = JSON.parse(localStorage.getItem('clipDumps') || '[]');
         let clipUrls = {};
         let currentVideoBlob = null;
         let currentEditVideoKey = null;
@@ -398,7 +378,7 @@
             });
         }
 
-        /* Clip dump blob helpers */
+        /* Clip blob helpers (stored by full key = dumpId + '::' + clipId) */
         function saveClipBlob(key, blob) {
             return new Promise((resolve, reject) => {
                 const tx = db.transaction(CLIP_STORE, 'readwrite');
@@ -426,84 +406,156 @@
             });
         }
 
-        /* ===== CLIP DUMP ===== */
-        async function handleClipDump(event) {
-            const files = Array.from(event.target.files || []);
-            event.target.value = '';
-            if (files.length === 0) return;
+        /* ===== CLIP DUMP MODAL ===== */
+        function openDumpModal() {
+            document.getElementById('dumpModal').classList.add('active');
+            document.getElementById('dumpTitle').value = '';
+        }
 
+        function closeDumpModal() { document.getElementById('dumpModal').classList.remove('active'); }
+
+        function createDump() {
+            const title = document.getElementById('dumpTitle').value.trim() || ('Clip Dump ' + new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+            clipDumps.unshift({ id: 'dump_' + Date.now(), title, createdAt: new Date().toISOString(), clips: [] });
+            localStorage.setItem('clipDumps', JSON.stringify(clipDumps));
+            closeDumpModal();
+            renderAll();
+        }
+
+        /* ===== CLIP DUMP HELPERS ===== */
+        function getDump(id) { return clipDumps.find(d => d.id === id); }
+
+        async function handleDumpFiles(dumpId, files) {
+            if (!files || files.length === 0) return;
+            const dump = getDump(dumpId);
+            if (!dump) return;
             const added = [];
             for (const file of files) {
                 if (!file || file.type.indexOf('video') === -1) continue;
-                const id = 'clip_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
-                const key = id + '.blob';
+                const clipId = 'clip_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+                const key = dumpId + '::' + clipId;
                 try {
                     await saveClipBlob(key, file);
-                    clipDump.unshift({ id, key, name: file.name, size: file.size, date: new Date().toISOString() });
+                    dump.clips.unshift({ id: clipId, key, name: file.name, size: file.size, date: new Date().toISOString() });
                     added.push(file.name);
                 } catch (err) {
                     console.error('Failed to save clip', file.name, err);
                 }
             }
-
-            localStorage.setItem('clipDump', JSON.stringify(clipDump));
-            renderClipDump();
-            if (added.length > 0) {
-                alert('Added ' + added.length + ' clip(s) to your dump.');
-            }
+            localStorage.setItem('clipDumps', JSON.stringify(clipDumps));
+            renderAll();
+            if (added.length > 0) alert('Added ' + added.length + ' clip(s) to "' + dump.title + '".');
         }
 
-        async function renderClipDump() {
-            const grid = document.getElementById('clipdumpGrid');
-            if (clipDump.length === 0) {
-                grid.innerHTML = `<p style="color:#666; font-size:0.85rem; text-align:center; padding:1rem 0;">No clips dumped yet. Add some above!</p>`;
-                return;
+        async function downloadDumpAll(dumpId) {
+            const dump = getDump(dumpId);
+            if (!dump || dump.clips.length === 0) { alert('This dump has no clips yet.'); return; }
+            for (const clip of dump.clips) {
+                const blob = await getClipBlob(clip.key);
+                if (blob) downloadBlob(blob, clip.name);
             }
-            grid.innerHTML = '';
-            for (const clip of clipDump) {
-                if (!clipUrls[clip.id]) {
-                    const blob = await getClipBlob(clip.key);
-                    if (blob) clipUrls[clip.id] = URL.createObjectURL(blob);
-                }
-                const card = document.createElement('div');
-                card.className = 'clip-card';
-                const videoHtml = clipUrls[clip.id]
-                    ? `<video src="${clipUrls[clip.id]}" muted preload="metadata"></video>`
-                    : `<div style="height:130px;background:#000;display:flex;align-items:center;justify-content:center;color:#555;font-size:0.8rem;">Unable to load</div>`;
-                const sizeMB = (clip.size / 1024 / 1024).toFixed(1);
-                card.innerHTML = `
-                    ${videoHtml}
-                    <div class="clip-info">
-                        <div class="clip-name" title="${escapeHtml(clip.name)}">${escapeHtml(clip.name)}</div>
-                        <div class="clip-date">${formatDate(clip.date)} &middot; ${sizeMB} MB</div>
-                        <div class="clip-actions">
-                            <button class="btn btn-secondary" onclick="downloadClip('${clip.id}')">Download</button>
-                            <button class="btn btn-danger" onclick="deleteClip('${clip.id}')">Delete</button>
-                        </div>
-                    </div>
-                `;
-                grid.appendChild(card);
-            }
+            alert('Downloaded ' + dump.clips.length + ' clip(s) to your Downloads folder. Now open CapCut and upload them.');
         }
 
-        async function downloadClip(id) {
-            const clip = clipDump.find(c => c.id === id);
+        async function downloadClip(dumpId, clipId) {
+            const dump = getDump(dumpId);
+            if (!dump) return;
+            const clip = dump.clips.find(c => c.id === clipId);
             if (!clip) return;
             const blob = await getClipBlob(clip.key);
             if (!blob) { alert('Clip not found.'); return; }
             downloadBlob(blob, clip.name);
         }
 
-        async function downloadAllClips() {
-            if (clipDump.length === 0) {
-                alert('No clips to download. Add some to your dump first.');
-                return;
+        async function deleteClip(dumpId, clipId) {
+            if (!confirm('Delete this clip from the dump?')) return;
+            const dump = getDump(dumpId);
+            if (!dump) return;
+            const clip = dump.clips.find(c => c.id === clipId);
+            if (clip) {
+                await deleteClipBlob(clip.key);
+                const urlKey = dumpId + '::' + clipId;
+                if (clipUrls[urlKey]) { URL.revokeObjectURL(clipUrls[urlKey]); delete clipUrls[urlKey]; }
+                dump.clips = dump.clips.filter(c => c.id !== clipId);
+                localStorage.setItem('clipDumps', JSON.stringify(clipDumps));
+                renderAll();
             }
-            for (const clip of clipDump) {
-                const blob = await getClipBlob(clip.key);
-                if (blob) downloadBlob(blob, clip.name);
+        }
+
+        async function deleteDump(dumpId) {
+            if (!confirm('Delete this clip dump and all its clips?')) return;
+            const dump = getDump(dumpId);
+            if (dump) {
+                for (const clip of dump.clips) await deleteClipBlob(clip.key);
+                clipDumps = clipDumps.filter(d => d.id !== dumpId);
+                localStorage.setItem('clipDumps', JSON.stringify(clipDumps));
+                renderAll();
             }
-            alert('Downloaded ' + clipDump.length + ' clip(s) to your Downloads folder. Now open CapCut and upload them.');
+        }
+
+        function dumpCardHtml(dump) {
+            const count = dump.clips.length;
+            let clipsHtml = '';
+            for (const clip of dump.clips.slice(0, 12)) {
+                const urlKey = dump.id + '::' + clip.id;
+                const sizeMB = (clip.size / 1024 / 1024).toFixed(1);
+                clipsHtml += `
+                    <div class="clip-card">
+                        <video src="" muted preload="metadata" data-urlkey="${urlKey}"></video>
+                        <div class="clip-info">
+                            <div class="clip-name" title="${escapeHtml(clip.name)}">${escapeHtml(clip.name)}</div>
+                            <div class="clip-date">${formatDate(clip.date)} &middot; ${sizeMB} MB</div>
+                            <div class="clip-actions">
+                                <button class="btn btn-secondary" onclick="downloadClip('${dump.id}','${clip.id}')">Download</button>
+                                <button class="btn btn-danger" onclick="deleteClip('${dump.id}','${clip.id}')">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="card dump-card">
+                    <div class="card-date">${formatDate(dump.createdAt)}</div>
+                    <h3>&#127909; ${escapeHtml(dump.title)}</h3>
+                    <span class="dump-badge">Clip Dump</span>
+                    <span class="dump-clip-count">${count} clip${count === 1 ? '' : 's'}</span>
+                    <div class="card-actions">
+                        <button class="btn btn-success" onclick="downloadDumpAll('${dump.id}')">Download All</button>
+                        <a class="btn btn-secondary" href="https://www.capcut.com/my-edit?start_tab=video" target="_blank" rel="noopener">Edit in CapCut</a>
+                        <button class="btn btn-danger" onclick="deleteDump('${dump.id}')">Delete Dump</button>
+                    </div>
+                    <div class="clipdump-area" data-dump="${dump.id}">
+                        <div class="ma-icon">&#127916;</div>
+                        <p>Click or drop to add clips (select multiple)</p>
+                        <input type="file" accept="video/*" multiple onchange="handleDumpFilesFromInput(event, '${dump.id}')">
+                    </div>
+                    ${count === 0 ? `<p style="color:#666; font-size:0.85rem; text-align:center; padding:0.5rem 0;">No clips in this dump yet. Add some above!</p>` : ''}
+                    <div class="clipdump-grid">${clipsHtml}</div>
+                </div>
+            `;
+        }
+
+        function handleDumpFilesFromInput(event, dumpId) {
+            const files = Array.from(event.target.files || []);
+            event.target.value = '';
+            handleDumpFiles(dumpId, files);
+        }
+
+        function renderClipPreviews(root) {
+            root.querySelectorAll('.clip-card video[data-urlkey]').forEach(video => {
+                const urlKey = video.getAttribute('data-urlkey');
+                if (!clipUrls[urlKey]) {
+                    getClipBlob(urlKey).then(blob => {
+                        if (blob) {
+                            clipUrls[urlKey] = URL.createObjectURL(blob);
+                            video.src = clipUrls[urlKey];
+                        }
+                    });
+                } else {
+                    video.src = clipUrls[urlKey];
+                }
+            });
         }
 
         function downloadBlob(blob, name) {
@@ -515,18 +567,6 @@
             a.click();
             document.body.removeChild(a);
             setTimeout(() => URL.revokeObjectURL(url), 3000);
-        }
-
-        async function deleteClip(id) {
-            if (!confirm('Delete this clip from your dump?')) return;
-            const clip = clipDump.find(c => c.id === id);
-            if (clip) {
-                await deleteClipBlob(clip.key);
-                if (clipUrls[id]) { URL.revokeObjectURL(clipUrls[id]); delete clipUrls[id]; }
-                clipDump = clipDump.filter(c => c.id !== id);
-                localStorage.setItem('clipDump', JSON.stringify(clipDump));
-                renderClipDump();
-            }
         }
 
         function handleFileSelect(event) {
@@ -584,7 +624,6 @@
             const content = document.getElementById('content').value.trim();
             const editId = document.getElementById('editId').value;
 
-            // For a newly selected file, capture the blob and filename
             const videoFile = document.getElementById('videoFile').files[0];
             if (videoFile && !currentEditVideoKey) {
                 currentVideoBlob = videoFile;
@@ -625,7 +664,7 @@
 
             localStorage.setItem('vlogs', JSON.stringify(vlogs));
             closeModal();
-            renderVlogs();
+            renderAll();
         }
 
         async function deleteVlog(id) {
@@ -634,7 +673,7 @@
                 if (vlog && vlog.videoKey) await deleteVideoBlob(vlog.videoKey);
                 vlogs = vlogs.filter(v => v.id !== id);
                 localStorage.setItem('vlogs', JSON.stringify(vlogs));
-                renderVlogs();
+                renderAll();
             }
         }
 
@@ -649,53 +688,79 @@
             return m + ':' + String(s).padStart(2, '0');
         }
 
-        async function renderVlogs() {
-            const query = document.getElementById('searchBar').value.toLowerCase();
-            const filtered = vlogs.filter(v =>
-                v.title.toLowerCase().includes(query) ||
-                v.content.toLowerCase().includes(query) ||
-                (v.mood && v.mood.toLowerCase().includes(query))
-            );
+        function vlogCardHtml(v) {
+            let videoHtml = '';
+            if (v.videoKey) {
+                if (!videoObjectUrls[v.videoKey]) {
+                    videoHtml = `<video src="" muted preload="metadata" data-videokey="${v.videoKey}"></video>`;
+                } else {
+                    videoHtml = `<video src="${videoObjectUrls[v.videoKey]}" controls preload="metadata"></video>`;
+                }
+            }
 
-            const container = document.getElementById('vlogList');
-            if (filtered.length === 0) {
-                container.innerHTML = `<div class="empty-state"><h2>${vlogs.length === 0 ? 'No entries yet' : 'No results found'}</h2><p>${vlogs.length === 0 ? 'Click "+ New Entry" to start documenting your move to NC!' : 'Try a different search.'}</p></div>`;
+            const editVideoBtn = v.videoKey ? `<a class="btn btn-success" href="https://www.capcut.com/my-edit?start_tab=video" target="_blank" rel="noopener">Edit in CapCut</a>` : '';
+
+            return `
+                <div class="card">
+                    <div class="card-date">${formatDate(v.createdAt)}${v.updatedAt !== v.createdAt ? ' (edited)' : ''}</div>
+                    <h3>${escapeHtml(v.title)}</h3>
+                    ${v.mood ? `<span class="card-mood">${v.mood}</span>` : ''}
+                    ${videoHtml}
+                    <p>${escapeHtml(v.content)}</p>
+                    <div class="card-actions">
+                        <button class="btn btn-secondary" onclick="openModal('${v.id}')">Edit</button>
+                        ${editVideoBtn}
+                        <button class="btn btn-danger" onclick="deleteVlog('${v.id}')">Delete</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderVideoPreviews(root) {
+            root.querySelectorAll('video[data-videokey]').forEach(video => {
+                const key = video.getAttribute('data-videokey');
+                if (!videoObjectUrls[key]) {
+                    getVideoBlob(key).then(blob => {
+                        if (blob) {
+                            videoObjectUrls[key] = URL.createObjectURL(blob);
+                            video.src = videoObjectUrls[key];
+                            video.setAttribute('controls', '');
+                        }
+                    });
+                }
+            });
+        }
+
+        function renderAll() {
+            const query = document.getElementById('searchBar').value.toLowerCase();
+            const container = document.getElementById('list');
+
+            const items = [];
+            for (const v of vlogs) {
+                const hay = (v.title + ' ' + (v.content || '') + ' ' + (v.mood || '')).toLowerCase();
+                if (!query || hay.includes(query)) items.push({ type: 'vlog', item: v, date: new Date(v.createdAt) });
+            }
+            for (const d of clipDumps) {
+                const hay = (d.title + ' ' + d.clips.map(c => c.name).join(' ')).toLowerCase();
+                if (!query || hay.includes(query)) items.push({ type: 'dump', item: d, date: new Date(d.createdAt) });
+            }
+            items.sort((a, b) => b.date - a.date);
+
+            if (items.length === 0) {
+                const msg = (vlogs.length === 0 && clipDumps.length === 0)
+                    ? 'Click "+ New Entry" or "+ New Clip Dump" to start documenting your move to NC!'
+                    : 'Try a different search.';
+                container.innerHTML = `<div class="empty-state"><h2>${query ? 'No results found' : 'Nothing here yet'}</h2><p>${msg}</p></div>`;
                 return;
             }
 
             let html = '';
-            for (const v of filtered) {
-                let videoHtml = '';
-                if (v.videoKey) {
-                    if (!videoObjectUrls[v.videoKey]) {
-                        const blob = await getVideoBlob(v.videoKey);
-                        if (blob) videoObjectUrls[v.videoKey] = URL.createObjectURL(blob);
-                    }
-                    if (videoObjectUrls[v.videoKey]) {
-                        videoHtml = `<video src="${videoObjectUrls[v.videoKey]}" controls preload="metadata"></video>`;
-                    } else {
-                        videoHtml = `<p style="color:#888;font-size:0.85rem;margin:0.5rem 0">Video not available</p>`;
-                    }
-                }
-
-                const editVideoBtn = v.videoKey ? `<a class="btn btn-success" href="https://www.capcut.com/my-edit?start_tab=video" target="_blank" rel="noopener">Edit in CapCut</a>` : '';
-
-                html += `
-                    <div class="vlog-card">
-                        <div class="vlog-date">${formatDate(v.createdAt)}${v.updatedAt !== v.createdAt ? ' (edited)' : ''}</div>
-                        <h3>${escapeHtml(v.title)}</h3>
-                        ${v.mood ? `<span class="vlog-mood">${v.mood}</span>` : ''}
-                        ${videoHtml}
-                        <p>${escapeHtml(v.content)}</p>
-                        <div class="vlog-actions">
-                            <button class="btn btn-secondary" onclick="openModal('${v.id}')">Edit</button>
-                            ${editVideoBtn}
-                            <button class="btn btn-danger" onclick="deleteVlog('${v.id}')">Delete</button>
-                        </div>
-                    </div>
-                `;
+            for (const it of items) {
+                html += it.type === 'vlog' ? vlogCardHtml(it.item) : dumpCardHtml(it.item);
             }
             container.innerHTML = html;
+            renderVideoPreviews(container);
+            renderClipPreviews(container);
         }
 
         function escapeHtml(text) {
@@ -703,40 +768,34 @@
             div.textContent = text;
             return div.innerHTML;
         }
+
         document.getElementById('modal').addEventListener('click', function(e) {
             if (e.target === this) closeModal();
         });
-
-        const clipdumpArea = document.getElementById('clipdumpArea');
-        clipdumpArea.addEventListener('dragover', (e) => { e.preventDefault(); clipdumpArea.style.borderColor = '#e94560'; });
-        clipdumpArea.addEventListener('dragleave', () => { clipdumpArea.style.borderColor = '#0f3460'; });
-        clipdumpArea.addEventListener('drop', (e) => {
-            e.preventDefault();
-            clipdumpArea.style.borderColor = '#0f3460';
-            handleClipDumpFiles(Array.from(e.dataTransfer.files));
+        document.getElementById('dumpModal').addEventListener('click', function(e) {
+            if (e.target === this) closeDumpModal();
         });
 
-        async function handleClipDumpFiles(files) {
-            if (files.length === 0) return;
-            const added = [];
-            for (const file of files) {
-                if (!file || file.type.indexOf('video') === -1) continue;
-                const id = 'clip_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
-                const key = id + '.blob';
-                try {
-                    await saveClipBlob(key, file);
-                    clipDump.unshift({ id, key, name: file.name, size: file.size, date: new Date().toISOString() });
-                    added.push(file.name);
-                } catch (err) { console.error('Failed to save clip', file.name, err); }
-            }
-            localStorage.setItem('clipDump', JSON.stringify(clipDump));
-            renderClipDump();
-            if (added.length > 0) alert('Added ' + added.length + ' clip(s) to your dump.');
-        }
+        // Drag-and-drop onto each dump's clip area
+        document.addEventListener('dragover', (e) => {
+            const area = e.target.closest && e.target.closest('.clipdump-area');
+            if (area) { e.preventDefault(); area.style.borderColor = '#0fbb7c'; }
+        });
+        document.addEventListener('dragleave', (e) => {
+            const area = e.target.closest && e.target.closest('.clipdump-area');
+            if (area) area.style.borderColor = '#0f3460';
+        });
+        document.addEventListener('drop', (e) => {
+            const area = e.target.closest && e.target.closest('.clipdump-area');
+            if (!area) return;
+            e.preventDefault();
+            area.style.borderColor = '#0f3460';
+            const dumpId = area.getAttribute('data-dump');
+            handleDumpFiles(dumpId, Array.from(e.dataTransfer.files));
+        });
 
         openDB().then(() => {
-            renderVlogs();
-            renderClipDump();
+            renderAll();
         });
     </script>
 </body>
