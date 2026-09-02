@@ -536,6 +536,7 @@
         let supa = null;
         let remoteVideosMeta = {}; // map videoKey/clipKey -> {storageName}
         let syncing = false;
+        let remoteUploadedKeys = JSON.parse(localStorage.getItem('remoteUploadedKeys') || '[]');
         if (SUPA_ENABLED && typeof window.supabase !== 'undefined' && window.supabase.createClient) {
             supa = window.supabase.createClient(SUPA_URL, SUPA_KEY, {
                 global: { headers: { 'x-secret': UPLOAD_PASSWORD } }
@@ -646,7 +647,7 @@
         }
 
         async function uploadBlobToSupa(key, blob) {
-            if (!supa) return false;
+            if (!supa || !isAdmin()) return false;
             try {
                 const client = supaClientWithSecret();
                 const path = storageNameFor(key);
@@ -658,6 +659,10 @@
                 }
                 const { error } = await client.storage.from(SUPA_BUCKET).upload(path, file, { upsert: true });
                 if (error) { console.warn('Supabase storage upload failed', key, error.message); return false; }
+                if (remoteUploadedKeys.indexOf(key) === -1) {
+                    remoteUploadedKeys.push(key);
+                    localStorage.setItem('remoteUploadedKeys', JSON.stringify(remoteUploadedKeys));
+                }
                 return true;
             } catch (e) { console.warn('Supabase storage upload error', key, e); return false; }
         }
@@ -680,7 +685,25 @@
                 const client = supaClientWithSecret();
                 const path = storageNameFor(key);
                 await client.storage.from(SUPA_BUCKET).remove([path]);
+                const ix = remoteUploadedKeys.indexOf(key);
+                if (ix !== -1) { remoteUploadedKeys.splice(ix, 1); localStorage.setItem('remoteUploadedKeys', JSON.stringify(remoteUploadedKeys)); }
             } catch (e) { console.warn('Supabase storage delete error', key, e); }
+        }
+
+        async function backfillMissingBlobs() {
+            // Admin: upload any local video/clip blobs that aren't confirmed in the cloud.
+            if (!supa || !isAdmin()) return;
+            const keys = [];
+            for (const v of vlogs) if (v.videoKey) keys.push(v.videoKey);
+            for (const d of clipDumps) for (const c of d.clips) keys.push(c.key);
+            let uploaded = 0;
+            for (const key of keys) {
+                if (remoteUploadedKeys.indexOf(key) !== -1) continue;
+                const isVideo = key.indexOf('video_') === 0;
+                const blob = isVideo ? await getVideoBlob(key) : await getClipBlob(key);
+                if (blob && await uploadBlobToSupa(key, blob)) uploaded++;
+            }
+            if (uploaded > 0) console.log('Backfilled', uploaded, 'blob(s) to the cloud');
         }
 
 
@@ -1263,7 +1286,7 @@
             let videoHtml = '';
             if (v.videoKey) {
                 if (!videoObjectUrls[v.videoKey]) {
-                    videoHtml = `<video src="" muted preload="metadata" data-videokey="${v.videoKey}"></video>`;
+                    videoHtml = `<video src="" muted playsinline preload="metadata" data-videokey="${v.videoKey}"></video>`;
                 } else {
                     videoHtml = `<video src="${videoObjectUrls[v.videoKey]}" controls preload="metadata"></video>`;
                 }
@@ -1295,12 +1318,20 @@
                 const key = video.getAttribute('data-videokey');
                 if (!videoObjectUrls[key]) {
                     getVideoBlobOrRemote(key).then(blob => {
-                        if (blob) {
+                        if (blob && video.isConnected) {
                             videoObjectUrls[key] = URL.createObjectURL(blob);
                             video.src = videoObjectUrls[key];
                             video.setAttribute('controls', '');
+                            video.setAttribute('playsinline', '');
+                            video.preload = 'metadata';
+                            if (video.load) video.load();
                         }
                     });
+                } else {
+                    video.src = videoObjectUrls[key];
+                    video.setAttribute('controls', '');
+                    video.setAttribute('playsinline', '');
+                    if (video.load) video.load();
                 }
             });
         }
@@ -1594,6 +1625,7 @@
                 if (syncing) return false;
                 syncing = true;
                 const pulled = await pullMetaFromSupa();
+                if (isAdmin()) await backfillMissingBlobs();
                 clipUrls = {};
                 videoObjectUrls = {};
                 renderAll();
@@ -1606,7 +1638,10 @@
 
         async function doSync() {
             if (!SUPA_ENABLED) { toast('Cloud sync not configured. Set SUPA_URL to enable.'); return; }
-            if (isAdmin()) await pushMetaToSupa();
+            if (isAdmin()) {
+                await pushMetaToSupa();
+                await backfillMissingBlobs();
+            }
             const pulled = await syncFromSupa();
             toast(pulled ? 'Synced latest from the cloud.' : 'Synced. Nothing new in the cloud.');
         }
