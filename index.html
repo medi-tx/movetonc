@@ -127,6 +127,9 @@
             background: #000;
         }
 
+        .card .yt-wrap { position: relative; width: 100%; aspect-ratio: 16/9; margin: 0.8rem 0; border-radius: 8px; overflow: hidden; background: #000; }
+        .card .yt-wrap iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
+
         .empty-state { text-align: center; padding: 4rem 1rem; color: #b8a6a8; }
         .empty-state h2 { margin-bottom: 0.5rem; }
 
@@ -165,31 +168,6 @@
 
         .file-upload-area p { color: #8a6a74; margin: 0; }
         .file-upload-area .file-name { color: #5a2e3a; margin-top: 0.5rem; font-size: 0.85rem; }
-
-        .video-preview { margin-top: 0.8rem; }
-        .video-preview video { width: 100%; max-height: 300px; border-radius: 8px; background: #000; }
-
-        .thumb-tools { margin-top: 0.8rem; padding: 0.8rem; border: 1px dashed #efa3b4; border-radius: 8px; background: #fdf7f2; }
-        .thumb-tools label { font-size: 0.8rem; color: #8a6a74; display: block; margin-bottom: 0.3rem; }
-        .thumb-tools input[type="range"] { width: 100%; margin: 0.4rem 0; accent-color: #efa3b4; }
-        .thumb-tools .btn { margin-top: 0.3rem; }
-        .thumb-preview { margin-top: 0.7rem; }
-        .thumb-preview img { width: 100%; max-height: 220px; object-fit: cover; border-radius: 8px; background: #000; }
-        .thumb-preview .thumb-current { color: #8a6a74; font-size: 0.85rem; }
-
-        .card .thumb-wrap { position: relative; margin: 0.8rem 0; }
-        .card .thumb-wrap img.video-thumb { width: 100%; max-height: 400px; object-fit: cover; border-radius: 8px; background: #000; display: block; }
-        .thumb-play {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 60px; height: 60px; border-radius: 50%; border: none; cursor: pointer;
-            background: rgba(90, 46, 58, 0.75); color: #fff; font-size: 1.6rem;
-            display: flex; align-items: center; justify-content: center; padding-left: 0.3rem;
-        }
-        .thumb-play:hover { background: rgba(90, 46, 58, 0.9); }
-        .watch-modal { width: 94%; max-width: 900px; text-align: center; }
-        .watch-modal .btn { margin-bottom: 0.8rem; }
-        .watch-modal #watchVideo video { width: 100%; max-height: 70vh; border-radius: 8px; background: #000; }
-        .watch-modal .watch-loading { color: #8a6a74; }
 
         /* Clip Dump card */
         .dump-card { border-left-color: #5a2e3a; }
@@ -442,7 +420,7 @@
                     <span id="storageText">--</span>
                 </span>
                 <button class="btn btn-secondary" onclick="openBackupModal()">Backup</button>
-                <button class="btn btn-secondary" onclick="openDumpModal()">+ New Clip Dump</button>
+                <button class="btn btn-secondary" onclick="openDumpModal()">+ New Dump</button>
                 <button class="btn btn-primary" onclick="openModal()">+ New Entry</button>
             </span>
 <a class="btn btn-success capcut-link" href="https://www.capcut.com/my-edit?start_tab=video" target="_blank" rel="noopener">Edit in CapCut</a>
@@ -485,19 +463,9 @@
                 </select>
             </div>
             <div class="form-group">
-                <label>Video (optional)</label>
-                <div class="file-upload-area" id="fileUploadArea">
-                    <p>Click or drag a video file here</p>
-                    <div class="file-name" id="fileName"></div>
-                    <input type="file" id="videoFile" accept="video/*" onchange="handleFileSelect(event)">
-                </div>
-                <div class="video-preview" id="videoPreview"></div>
-                <div class="thumb-tools" id="thumbTools" style="display:none">
-                    <label for="thumbSlot">Pick the frame to use as this video's thumbnail</label>
-                    <input type="range" id="thumbSlot" min="0" max="100" step="0.1" value="0" oninput="thumbSlotInput()">
-                    <button class="btn btn-secondary" onclick="captureThumbFromVideo()">Use this frame as thumbnail</button>
-                    <div class="thumb-preview" id="thumbPreview"></div>
-                </div>
+                <label for="youtube">YouTube Video Link</label>
+                <input type="text" id="youtube" placeholder="Paste a youtube.com or youtu.be link to your uploaded vlog">
+                <p style="color:#8a6a74; font-size:0.8rem; margin-top:0.3rem;">Upload your finished vlog to YouTube (unlisted) on your phone, then paste the link here. Viewers can watch it right in the entry.</p>
             </div>
             <div class="form-group">
                 <label for="content">Description</label>
@@ -549,14 +517,6 @@
                 <button class="btn btn-primary" onclick="saveDumpModal()">Save</button>
                 <button class="btn btn-secondary" onclick="closeDumpModal()">Cancel</button>
             </div>
-        </div>
-    </div>
-
-    <!-- Watch Video Modal -->
-    <div class="modal-overlay" id="watchModal" onclick="if(event.target===this)closeWatch()">
-        <div class="modal watch-modal">
-            <button class="btn btn-secondary" onclick="closeWatch()">Close</button>
-            <div id="watchVideo"></div>
         </div>
     </div>
 
@@ -614,11 +574,6 @@
         let clipUrls = {};
         let dumpModalFiles = [];
         let dumpModalType = 'clip';
-        let currentVideoBlob = null;
-        let currentEditVideoKey = null;
-        let currentVideoFileName = null;
-        let currentThumbBlob = null;
-        let videoObjectUrls = {};
         let currentFilter = 'all';
 
         function isAdmin() { return accessLevel === 'admin'; }
@@ -664,12 +619,18 @@
             // Admin password gates writes; viewer password still lets reads through policies.
             return isAdmin() ? UPLOAD_PASSWORD : VIEW_PASSWORD;
         }
+        const _clients = {};
         function supaClientWithSecret() {
             if (!supa) return null;
             if (typeof window.supabase === 'undefined' || !window.supabase.createClient) return supa;
-            return window.supabase.createClient(SUPA_URL, SUPA_KEY, {
-                global: { headers: { 'x-secret': supaSecret() } }
-            });
+            const secret = supaSecret();
+            if (!_clients[secret]) {
+                _clients[secret] = window.supabase.createClient(SUPA_URL, SUPA_KEY, {
+                    global: { headers: { 'x-secret': secret } },
+                    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
+                });
+            }
+            return _clients[secret];
         }
 
         function storageNameFor(key) {
@@ -758,17 +719,14 @@
         }
 
         async function backfillMissingBlobs() {
-            // Admin: upload any local video/clip/thumb blobs that aren't confirmed in the cloud.
+            // Admin: upload any local clip/photo blobs that aren't confirmed in the cloud.
             if (!supa || !isAdmin()) return;
             const keys = [];
-            for (const v of vlogs) { if (v.videoKey) keys.push(v.videoKey); if (v.thumbKey) keys.push(v.thumbKey); }
             for (const d of clipDumps) for (const c of d.clips) keys.push(c.key);
             let uploaded = 0;
             for (const key of keys) {
                 if (remoteUploadedKeys.indexOf(key) !== -1) continue;
-                const isVideo = key.indexOf('video_') === 0;
-                const isThumb = key.indexOf('thumb_') === 0;
-                const blob = isVideo ? await getVideoBlob(key) : isThumb ? await getThumbBlob(key) : await getClipBlob(key);
+                const blob = await getClipBlob(key);
                 if (blob && await uploadBlobToSupa(key, blob)) uploaded++;
             }
             if (uploaded > 0) console.log('Backfilled', uploaded, 'blob(s) to the cloud');
@@ -1300,114 +1258,24 @@
         }
 
 
-        function handleFileSelect(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            document.getElementById('fileName').textContent = file.name;
-            currentVideoBlob = file;
-            currentEditVideoKey = null;
-            currentVideoFileName = file.name;
-            const url = URL.createObjectURL(file);
-            document.getElementById('videoPreview').innerHTML = `<video id="editorVideo" src="${url}" controls playsinline></video>`;
-            setupThumbTools(document.getElementById('editorVideo'));
-        }
-
-        function thumbSlotInput() {
-            const video = document.getElementById('editorVideo');
-            const slider = document.getElementById('thumbSlot');
-            if (video && slider && slider.value) video.currentTime = parseFloat(slider.value);
-        }
-
-        function setupThumbTools(video) {
-            const tools = document.getElementById('thumbTools');
-            const slider = document.getElementById('thumbSlot');
-            if (!tools || !video) return;
-            tools.style.display = 'block';
-            if (slider) { slider.value = 0; }
-            video.addEventListener('loadedmetadata', function() {
-                if (slider && video.duration) slider.max = video.duration;
-            });
-            video.addEventListener('timeupdate', function() {
-                if (slider && video.duration) slider.value = String(video.currentTime);
-            });
-        }
-
-        function resetThumbUI() {
-            currentThumbBlob = null;
-            const tools = document.getElementById('thumbTools');
-            const slider = document.getElementById('thumbSlot');
-            const p = document.getElementById('thumbPreview');
-            if (tools) tools.style.display = 'none';
-            if (slider) { slider.max = 100; slider.value = 0; }
-            if (p) p.innerHTML = '';
-        }
-
-        function captureThumbFromVideo() {
-            const video = document.getElementById('editorVideo');
-            if (!video || !video.videoWidth) { alert('Load a video first, then pick a frame.'); return; }
-            const doCapture = () => {
-                const cw = video.videoWidth, ch = video.videoHeight;
-                const canvas = document.createElement('canvas');
-                canvas.width = cw;
-                canvas.height = ch;
-                canvas.getContext('2d').drawImage(video, 0, 0, cw, ch);
-                canvas.toBlob(function(blob) {
-                    if (blob) {
-                        currentThumbBlob = blob;
-                        const p = document.getElementById('thumbPreview');
-                        if (p) p.innerHTML = `<img src="${URL.createObjectURL(blob)}" alt="Thumbnail">`;
-                    } else {
-                        alert('Could not capture this frame. Try another spot in the video.');
-                    }
-                }, 'image/jpeg', 0.85);
-            };
-            if (video.seeking) video.addEventListener('seeked', doCapture, { once: true });
-            else doCapture();
-        }
-
         function openModal(id) {
             if (!isAdmin()) return;
             document.getElementById('modal').classList.add('active');
-            currentVideoBlob = null;
-            currentEditVideoKey = null;
-            currentVideoFileName = null;
-            document.getElementById('fileName').textContent = '';
-            document.getElementById('videoPreview').innerHTML = '';
-            document.getElementById('videoFile').value = '';
-            resetThumbUI();
+            document.getElementById('editId').value = id || '';
 
             if (id) {
                 const vlog = vlogs.find(v => v.id === id);
                 document.getElementById('modalTitle').textContent = 'Edit Vlog Entry';
-                document.getElementById('editId').value = id;
                 document.getElementById('title').value = vlog.title;
                 document.getElementById('mood').value = vlog.mood;
                 document.getElementById('content').value = vlog.content;
-                if (vlog.videoKey) {
-                    currentEditVideoKey = vlog.videoKey;
-                    document.getElementById('fileName').textContent = vlog.videoFileName || 'Current video';
-                    getVideoBlobOrRemote(vlog.videoKey).then(blob => {
-                        if (blob) {
-                            currentVideoBlob = blob;
-                            const url = URL.createObjectURL(blob);
-                            document.getElementById('videoPreview').innerHTML = `<video id="editorVideo" src="${url}" controls playsinline></video>`;
-                            setupThumbTools(document.getElementById('editorVideo'));
-                        }
-                    });
-                }
-                if (vlog.thumbKey) {
-                    const p = document.getElementById('thumbPreview');
-                    if (p) p.innerHTML = '<em class="thumb-current">Current thumbnail</em>';
-                    getThumbBlobOrRemote(vlog.thumbKey).then(b => {
-                        if (b && p) p.innerHTML = `<img src="${URL.createObjectURL(b)}" alt="Current thumbnail">`;
-                    });
-                }
+                document.getElementById('youtube').value = vlog.youtube || '';
             } else {
                 document.getElementById('modalTitle').textContent = 'New Vlog Entry';
-                document.getElementById('editId').value = '';
                 document.getElementById('title').value = '';
                 document.getElementById('mood').value = '';
                 document.getElementById('content').value = '';
+                document.getElementById('youtube').value = '';
             }
         }
 
@@ -1418,55 +1286,21 @@
             const mood = document.getElementById('mood').value;
             const content = document.getElementById('content').value.trim();
             const editId = document.getElementById('editId').value;
-
-            const videoFile = document.getElementById('videoFile').files[0];
-            if (videoFile && !currentEditVideoKey) {
-                currentVideoBlob = videoFile;
-                currentVideoFileName = videoFile.name;
-            }
-            const hasEditedVideo = currentVideoBlob && !currentEditVideoKey && currentVideoFileName;
+            const youtube = document.getElementById('youtube').value.trim();
+            const ytId = youtubeId(youtube);
 
             if (!title) { alert('Please add a title.'); return; }
             if (!mood) { alert('Please select a mood.'); return; }
             if (!content) { alert('Please add a description.'); return; }
+            if (youtube && !ytId) { alert('That YouTube link doesn\'t look valid. Use a youtube.com/watch or youtu.be link.'); return; }
 
             if (editId) {
                 const index = vlogs.findIndex(v => v.id === editId);
                 const existing = vlogs[index];
-
-                let thumbKey = existing.thumbKey || null;
-                if (hasEditedVideo && thumbKey) thumbKey = null;
-                if (currentThumbBlob) {
-                    if (thumbKey) { await deleteThumbBlob(thumbKey); await deleteBlobFromSupa(thumbKey); }
-                    thumbKey = 'thumb_' + editId + '_' + Date.now();
-                    await saveThumbBlob(thumbKey, currentThumbBlob);
-                }
-
-                if (hasEditedVideo) {
-                    if (existing.videoKey) { await deleteVideoBlob(existing.videoKey); await deleteBlobFromSupa(existing.videoKey); }
-                    const videoKey = 'video_' + editId + '_' + Date.now();
-                    await saveVideoBlob(videoKey, currentVideoBlob);
-                    vlogs[index] = { ...existing, title: title || existing.title, mood, content, videoKey, videoFileName: currentVideoFileName, thumbKey, updatedAt: new Date().toISOString() };
-                } else if (currentVideoBlob && currentEditVideoKey) {
-                    vlogs[index] = { ...existing, title: title || existing.title, mood, content, thumbKey, updatedAt: new Date().toISOString() };
-                } else {
-                    if (existing.videoKey) { await deleteVideoBlob(existing.videoKey); await deleteBlobFromSupa(existing.videoKey); }
-                    if (existing.thumbKey) { await deleteThumbBlob(existing.thumbKey); await deleteBlobFromSupa(existing.thumbKey); }
-                    vlogs[index] = { ...existing, title: title || existing.title, mood, content, videoKey: null, videoFileName: null, thumbKey: null, updatedAt: new Date().toISOString() };
-                }
+                vlogs[index] = { ...existing, title: title || existing.title, mood, content, youtube, updatedAt: new Date().toISOString() };
             } else {
                 const id = Date.now().toString();
-                let videoKey = null, videoFileName = null, thumbKey = null;
-                if (currentVideoBlob && currentVideoFileName) {
-                    videoKey = 'video_' + id + '_' + Date.now();
-                    videoFileName = currentVideoFileName;
-                    await saveVideoBlob(videoKey, currentVideoBlob);
-                    if (currentThumbBlob) {
-                        thumbKey = 'thumb_' + id + '_' + Date.now();
-                        await saveThumbBlob(thumbKey, currentThumbBlob);
-                    }
-                }
-                vlogs.unshift({ id, title: title || 'Untitled', mood, content, videoKey, videoFileName, thumbKey, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+                vlogs.unshift({ id, title: title || 'Untitled', mood, content, youtube, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
             }
 
             localStorage.setItem('vlogs', JSON.stringify(vlogs));
@@ -1476,20 +1310,26 @@
             pushMetaToSupa();
         }
 
-        async function deleteVlog(id) {
+        function deleteVlog(id) {
             if (!confirm('Delete this vlog entry?')) return;
             const vlog = vlogs.find(v => v.id === id);
             vlogs = vlogs.filter(v => v.id !== id);
             localStorage.setItem('vlogs', JSON.stringify(vlogs));
             renderAll();
-            if (vlog && vlog.videoKey) { try { await deleteVideoBlob(vlog.videoKey); } catch (e) { console.warn(e); } try { await deleteBlobFromSupa(vlog.videoKey); } catch (e) { console.warn(e); } }
-            if (vlog && vlog.thumbKey) { try { await deleteThumbBlob(vlog.thumbKey); } catch (e) { console.warn(e); } try { await deleteBlobFromSupa(vlog.thumbKey); } catch (e) { console.warn(e); } }
-            try { await pushMetaToSupa(); } catch (e) { console.warn(e); }
             syncNow();
+            pushMetaToSupa();
         }
 
         function formatDate(iso) {
             return new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        }
+
+        function youtubeId(url) {
+            if (!url) return null;
+            let m = url.match(/(?:youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|embed\/|live\/))([A-Za-z0-9_-]{11})/);
+            if (m) return m[1];
+            m = url.match(/youtu\.be\/([A-Za-z0-9_-]{11})/);
+            return m ? m[1] : null;
         }
 
         function formatTime(sec) {
@@ -1500,28 +1340,15 @@
         }
 
         function vlogCardHtml(v) {
+            const yt = youtubeId(v.youtube);
             let videoHtml = '';
-            if (v.videoKey) {
-                if (v.thumbKey) {
-                    videoHtml = `<div class="thumb-wrap">
-                            <img class="video-thumb" data-thumbkey="${v.thumbKey}" alt="${escapeHtml(v.title)}" onclick="openWatch('${v.videoKey}')">
-                            <button class="thumb-play" onclick="openWatch('${v.videoKey}')">&#9654;</button>
-                        </div>`;
-                } else if (!videoObjectUrls[v.videoKey]) {
-                    videoHtml = `<video src="" muted playsinline preload="metadata" data-videokey="${v.videoKey}"></video>`;
-                } else {
-                    videoHtml = `<video src="${videoObjectUrls[v.videoKey]}" controls preload="metadata"></video>`;
-                }
+            if (yt) {
+                videoHtml = `<div class="yt-wrap"><iframe src="https://www.youtube.com/embed/${yt}" title="${escapeHtml(v.title)}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div>`;
             }
 
-            const editVideoBtn = v.videoKey ? `<a class="btn btn-success" href="https://www.capcut.com/my-edit?start_tab=video" target="_blank" rel="noopener">Edit in CapCut</a>` : '';
-            const pendingCloud = (isAdmin() && v.videoKey && remoteUploadedKeys.indexOf(v.videoKey) === -1)
-                ? '<span class="cloud-pending">Not synced to cloud yet</span>'
-                : '';
             const actionsHtml = isAdmin()
                 ? `<div class="card-actions">
                         <button class="btn btn-secondary" onclick="openModal('${v.id}')">Edit</button>
-                        ${editVideoBtn}
                         <button class="btn btn-danger" onclick="deleteVlog('${v.id}')">Delete</button>
                     </div>`
                 : '';
@@ -1531,60 +1358,11 @@
                     <div class="card-date">${formatDate(v.createdAt)}${v.updatedAt !== v.createdAt ? ' (edited)' : ''}</div>
                     <h3>${escapeHtml(v.title)}</h3>
                     ${v.mood ? `<span class="card-mood">${v.mood}</span>` : ''}
-                    ${pendingCloud}
                     ${videoHtml}
                     <p>${escapeHtml(v.content)}</p>
                     ${actionsHtml}
                 </div>
             `;
-        }
-
-        function renderVideoPreviews(root) {
-            root.querySelectorAll('video[data-videokey]').forEach(video => {
-                const key = video.getAttribute('data-videokey');
-                if (!videoObjectUrls[key]) {
-                    getVideoBlobOrRemote(key).then(blob => {
-                        if (blob && video.isConnected) {
-                            videoObjectUrls[key] = URL.createObjectURL(blob);
-                            video.src = videoObjectUrls[key];
-                            video.setAttribute('controls', '');
-                            video.setAttribute('playsinline', '');
-                            video.preload = 'metadata';
-                            if (video.load) video.load();
-                        }
-                    });
-                } else {
-                    video.src = videoObjectUrls[key];
-                    video.setAttribute('controls', '');
-                    video.setAttribute('playsinline', '');
-                    if (video.load) video.load();
-                }
-            });
-        }
-
-        function renderThumbPreviews(root) {
-            root.querySelectorAll('img.video-thumb[data-thumbkey]').forEach(img => {
-                const key = img.getAttribute('data-thumbkey');
-                getThumbBlobOrRemote(key).then(blob => {
-                    if (blob && img.isConnected) img.src = URL.createObjectURL(blob);
-                });
-            });
-        }
-
-        function openWatch(key) {
-            const host = document.getElementById('watchModal');
-            const box = document.getElementById('watchVideo');
-            box.innerHTML = '<p class="watch-loading">Loading video...</p>';
-            host.classList.add('active');
-            getVideoBlobOrRemote(key).then(blob => {
-                if (!blob) { box.innerHTML = '<p class="watch-loading">Video not available yet. Try syncing.</p>'; return; }
-                box.innerHTML = `<video src="${URL.createObjectURL(blob)}" controls autoplay playsinline></video>`;
-            });
-        }
-
-        function closeWatch() {
-            document.getElementById('watchModal').classList.remove('active');
-            document.getElementById('watchVideo').innerHTML = '';
         }
 
         function setFilter(f) {
@@ -1627,8 +1405,6 @@
                 html += it.type === 'vlog' ? vlogCardHtml(it.item) : dumpCardHtml(it.item);
             }
             container.innerHTML = html;
-            renderVideoPreviews(container);
-            renderThumbPreviews(container);
             renderClipPreviews(container);
         }
 
@@ -1657,16 +1433,6 @@
 
         async function exportAll() {
             const blobMap = {};
-            for (const v of vlogs) {
-                if (v.videoKey) {
-                    const blob = await getVideoBlobOrRemote(v.videoKey);
-                    if (blob) blobMap[v.videoKey] = blob;
-                }
-                if (v.thumbKey) {
-                    const blob = await getThumbBlobOrRemote(v.thumbKey);
-                    if (blob) blobMap[v.thumbKey] = blob;
-                }
-            }
             for (const d of clipDumps) {
                 for (const c of d.clips) {
                     const blob = await getClipBlobOrRemote(c.key);
@@ -1720,7 +1486,6 @@
                     }
                 }
                 clipUrls = {};
-                videoObjectUrls = {};
                 closeBackupModal();
                 await pushMetaToSupa();
                 renderAll();
@@ -1899,7 +1664,6 @@
                     backfillMissingBlobs();
                 }
                 clipUrls = {};
-                videoObjectUrls = {};
                 renderAll();
             } catch (e) {
                 console.warn('autoSync error', e);
