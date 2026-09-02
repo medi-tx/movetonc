@@ -958,6 +958,7 @@
                 dump.updatedAt = new Date().toISOString();
                 localStorage.setItem('clipDumps', JSON.stringify(clipDumps));
                 pushMetaToSupa();
+                syncNow();
             }
             closeDumpModal();
             renderAll();
@@ -983,6 +984,7 @@
             await pushMetaToSupa();
             closeDumpModal();
             renderAll();
+            syncNow();
             if (dump.clips.length > 0) alert('Created "' + dump.title + '" with ' + dump.clips.length + ' item(s).');
         }
 
@@ -1010,6 +1012,7 @@
             localStorage.setItem('clipDumps', JSON.stringify(clipDumps));
             await pushMetaToSupa();
             renderAll();
+            syncNow();
             if (added.length > 0) alert('Added ' + added.length + ' item(s) to "' + dump.title + '".');
         }
 
@@ -1047,6 +1050,7 @@
                 localStorage.setItem('clipDumps', JSON.stringify(clipDumps));
                 await pushMetaToSupa();
                 renderAll();
+                syncNow();
             }
         }
 
@@ -1059,6 +1063,7 @@
                 localStorage.setItem('clipDumps', JSON.stringify(clipDumps));
                 await pushMetaToSupa();
                 renderAll();
+                syncNow();
             }
         }
 
@@ -1069,6 +1074,7 @@
                 localStorage.setItem('clipDumps', JSON.stringify(clipDumps));
                 pushMetaToSupa();
                 renderAll();
+                syncNow();
             }
         }
 
@@ -1467,6 +1473,7 @@
             await pushMetaToSupa();
             closeModal();
             renderAll();
+            syncNow();
         }
 
         async function deleteVlog(id) {
@@ -1478,6 +1485,7 @@
             if (vlog && vlog.videoKey) { try { await deleteVideoBlob(vlog.videoKey); } catch (e) { console.warn(e); } try { await deleteBlobFromSupa(vlog.videoKey); } catch (e) { console.warn(e); } }
             if (vlog && vlog.thumbKey) { try { await deleteThumbBlob(vlog.thumbKey); } catch (e) { console.warn(e); } try { await deleteBlobFromSupa(vlog.thumbKey); } catch (e) { console.warn(e); } }
             try { await pushMetaToSupa(); } catch (e) { console.warn(e); }
+            syncNow();
         }
 
         function formatDate(iso) {
@@ -1716,6 +1724,7 @@
                 closeBackupModal();
                 await pushMetaToSupa();
                 renderAll();
+                syncNow();
                 alert('Backup restored successfully!');
             } catch (err) {
                 console.error(err);
@@ -1894,6 +1903,17 @@
                 syncing = false;
                 updateStorageMeter();
             }
+        }
+
+        let syncSoonTimer = null;
+        function syncSoon() {
+            if (!supa) return;
+            if (syncSoonTimer) clearTimeout(syncSoonTimer);
+            syncSoonTimer = setTimeout(() => { if (accessLevel !== null) autoSync(); }, 1500);
+        }
+
+        function syncNow() {
+            if (supa && accessLevel !== null) autoSync();
         }
 
         function applyAccessUI() {
