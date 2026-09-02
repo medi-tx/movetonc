@@ -364,6 +364,7 @@
         .lock-error { color: #8f2d40; font-size: 0.8rem; margin-bottom: 0.8rem; min-height: 1rem; }
         body.mode-view #adminHeader { display: none !important; }
         body.mode-view .tab-dump { display: none !important; }
+        body.mode-view .tab-all { display: none !important; }
     </style>
 </head>
 <body>
@@ -401,7 +402,7 @@
 
     <div class="container">
         <div class="tabs" id="tabs">
-            <button data-filter="all" class="active" onclick="setFilter('all')">All</button>
+            <button data-filter="all" class="tab-all" onclick="setFilter('all')">All</button>
             <button data-filter="blog" onclick="setFilter('blog')">Entries</button>
             <button data-filter="dump" class="tab-dump" onclick="setFilter('dump')">Clip Dumps</button>
         </div>
@@ -1392,8 +1393,8 @@
                 document.getElementById('lockOverlay').style.display = 'none';
                 document.body.classList.toggle('mode-view', !isAdmin());
                 if (!isAdmin()) {
-                    currentFilter = 'all';
-                    document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('active', b.dataset.filter === 'all'));
+                    currentFilter = 'blog';
+                    document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('active', b.dataset.filter === 'blog'));
                 }
             }
         }
