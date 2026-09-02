@@ -486,6 +486,7 @@
                     Restore Backup
                     <input type="file" id="backupFile" accept=".json,application/json" style="display:none;" onchange="restoreBackup(event)">
                 </label>
+                <button class="btn btn-primary" onclick="requestPersistentStorage()">Increase Storage (Persistent Space)</button>
             </div>
             <div class="form-actions">
                 <button class="btn btn-secondary" onclick="closeBackupModal()">Close</button>
@@ -1301,6 +1302,31 @@
                     wrap.classList.toggle('warn', pct > 80);
                 }
             } catch (e) { /* ignore */ }
+        }
+
+        async function requestPersistentStorage() {
+            try {
+                if (!navigator.storage || !navigator.storage.persist) {
+                    alert('This browser does not support requesting persistent storage.');
+                    return;
+                }
+                const persisted = await navigator.storage.persisted();
+                let ok;
+                if (persisted) {
+                    ok = true;
+                } else {
+                    ok = await navigator.storage.persist();
+                }
+                let msg = ok
+                    ? 'Persistent storage enabled! Your data is now marked to be kept, and Chrome can grant a larger quota. Reload the page and the storage meter should update.'
+                    : 'The browser did not grant persistent storage. Make sure you are viewing over https (not file://) and that your disk has free space.';
+                alert(msg);
+                updateStorageMeter();
+                setTimeout(updateStorageMeter, 2000);
+                setTimeout(updateStorageMeter, 5000);
+            } catch (e) {
+                alert('Failed to request persistent storage: ' + e.message);
+            }
         }
 
         function formatBytes(bytes) {
