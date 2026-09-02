@@ -500,7 +500,7 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
     <script>
         const DB_NAME = 'VlogDB';
         const DB_VERSION = 2;
@@ -520,10 +520,12 @@
         let supa = null;
         let remoteVideosMeta = {}; // map videoKey/clipKey -> {storageName}
         let syncing = false;
-        if (SUPA_ENABLED && typeof createClient !== 'undefined') {
-            supa = createClient(SUPA_URL, SUPA_KEY, {
+        if (SUPA_ENABLED && typeof window.supabase !== 'undefined' && window.supabase.createClient) {
+            supa = window.supabase.createClient(SUPA_URL, SUPA_KEY, {
                 global: { headers: { 'x-secret': UPLOAD_PASSWORD } }
             });
+        } else {
+            console.warn('Supabase SDK not loaded; sync disabled.');
         }
         let accessLevel = sessionStorage.getItem('ncAccess') || null;
         let db = null;
@@ -582,7 +584,8 @@
         }
         function supaClientWithSecret() {
             if (!supa) return null;
-            return createClient(SUPA_URL, SUPA_KEY, {
+            if (typeof window.supabase === 'undefined' || !window.supabase.createClient) return supa;
+            return window.supabase.createClient(SUPA_URL, SUPA_KEY, {
                 global: { headers: { 'x-secret': supaSecret() } }
             });
         }
@@ -1470,13 +1473,19 @@
             if (!wrap || !fill || !text) return;
             try {
                 // Prefer cloud usage when Supabase sync is enabled.
-                if (supa) {
-                    const cloud = await supaStorageUsage();
-                    if (cloud) {
-                        const pct = Math.min(100, Math.round(cloud.used / cloud.quota * 100));
-                        fill.style.width = pct + '%';
-                        text.textContent = formatBytes(cloud.used) + ' / 1 GB cloud';
-                        wrap.classList.toggle('warn', pct > 80);
+                if (SUPA_ENABLED) {
+                    if (supa) {
+                        const cloud = await supaStorageUsage();
+                        if (cloud) {
+                            const pct = Math.min(100, Math.round(cloud.used / cloud.quota * 100));
+                            fill.style.width = pct + '%';
+                            text.textContent = formatBytes(cloud.used) + ' / 1 GB cloud';
+                            wrap.classList.toggle('warn', pct > 80);
+                            return;
+                        }
+                    } else {
+                        text.textContent = 'cloud off';
+                        fill.style.width = '0%';
                         return;
                     }
                 }
