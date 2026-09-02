@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>My Move to NC</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -550,6 +553,23 @@
         // Change these to set your own passwords (client-side only, see note)
         const VIEW_PASSWORD = '28027';
         const UPLOAD_PASSWORD = 'SaM!';
+
+        // ===== CACHE BUSTING / VERSION CHECK =====
+        // Bumped whenever the site is updated so stale pages auto-reload once.
+        const APP_VERSION = 'v12';
+
+        // Auto-reload once if the served version differs from what this browser last ran.
+        // (Skips reload on a brand-new browser, where there's nothing cached to bust.)
+        (function versionCheck() {
+            try {
+                const seen = localStorage.getItem('app_version');
+                if (seen !== APP_VERSION) {
+                    const hadVersion = seen !== null;
+                    localStorage.setItem('app_version', APP_VERSION);
+                    if (hadVersion) location.reload();
+                }
+            } catch (e) {}
+        })();
 
         // ===== SUPABASE (cross-device sync) =====
         // Set SUPA_URL / SUPA_KEY to your Supabase project values to enable sync.
