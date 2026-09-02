@@ -323,21 +323,75 @@
             z-index: 200;
             box-shadow: 0 4px 16px rgba(0,0,0,0.4);
         }
+
+        /* Lock screen */
+        .lock-overlay {
+            position: fixed;
+            inset: 0;
+            background: #1a1a2e;
+            z-index: 500;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+        }
+        .lock-box {
+            background: #16213e;
+            border: 1px solid #0f3460;
+            border-radius: 12px;
+            padding: 2.5rem 2rem;
+            width: 100%;
+            max-width: 380px;
+            text-align: center;
+        }
+        .lock-box h1 { color: #e94560; margin-bottom: 0.4rem; font-size: 1.6rem; }
+        .lock-box p { color: #888; font-size: 0.9rem; margin-bottom: 1.5rem; }
+        .lock-box input {
+            width: 100%;
+            padding: 0.7rem;
+            border: 1px solid #0f3460;
+            border-radius: 6px;
+            background: #1a1a2e;
+            color: #eee;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        .lock-box .lock-btns { display: flex; gap: 0.6rem; }
+        .lock-box .btn { flex: 1; }
+        .lock-error { color: #e94560; font-size: 0.8rem; margin-bottom: 0.8rem; min-height: 1rem; }
+        body.mode-view #adminHeader { display: none !important; }
     </style>
 </head>
 <body>
 
+    <!-- Lock screen -->
+    <div class="lock-overlay" id="lockOverlay">
+        <div class="lock-box">
+            <h1>My Move to NC</h1>
+            <p>Enter a password to continue</p>
+            <div id="lockError" class="lock-error"></div>
+            <input type="password" id="lockPass" placeholder="Password" autocomplete="off" onkeydown="if(event.key==='Enter')tryUnlock('view')">
+            <div class="lock-btns">
+                <button class="btn btn-primary" onclick="tryUnlock('upload')">Upload</button>
+                <button class="btn btn-secondary" onclick="tryUnlock('view')">View Vlogs</button>
+            </div>
+        </div>
+    </div>
+
     <header>
         <h1>My Move to NC</h1>
         <div style="display:flex; gap:0.6rem; flex-wrap:wrap; align-items:center;">
-            <span class="storage-bar-wrap" id="storageBar" title="Amount of browser storage used">
-                <span class="bar"><div id="storageFill"></div></span>
-                <span id="storageText">--</span>
+            <span id="adminHeader" style="display:contents;">
+                <span class="storage-bar-wrap" id="storageBar" title="Amount of browser storage used">
+                    <span class="bar"><div id="storageFill"></div></span>
+                    <span id="storageText">--</span>
+                </span>
+                <button class="btn btn-secondary" onclick="openBackupModal()">Backup</button>
+                <button class="btn btn-secondary" onclick="openDumpModal()">+ New Clip Dump</button>
+                <button class="btn btn-primary" onclick="openModal()">+ New Entry</button>
             </span>
-            <button class="btn btn-secondary" onclick="openBackupModal()">Backup</button>
             <a class="btn btn-success" href="https://www.capcut.com/my-edit?start_tab=video" target="_blank" rel="noopener">Edit in CapCut</a>
-            <button class="btn btn-secondary" onclick="openDumpModal()">+ New Clip Dump</button>
-            <button class="btn btn-primary" onclick="openModal()">+ New Entry</button>
         </div>
     </header>
 
@@ -444,6 +498,10 @@
         const DB_VERSION = 2;
         const STORE_NAME = 'videos';
         const CLIP_STORE = 'clips';
+        // Change these to set your own passwords (client-side only, see note)
+        const VIEW_PASSWORD = 'viewnc';
+        const UPLOAD_PASSWORD = 'uploadnc';
+        let accessLevel = sessionStorage.getItem('ncAccess') || null;
         let db = null;
         let vlogs = JSON.parse(localStorage.getItem('vlogs') || '[]');
         let clipDumps = JSON.parse(localStorage.getItem('clipDumps') || '[]');
@@ -454,6 +512,36 @@
         let currentVideoFileName = null;
         let videoObjectUrls = {};
         let currentFilter = 'all';
+
+        function isAdmin() { return accessLevel === 'admin'; }
+        function isView() { return accessLevel === 'view'; }
+
+        function tryUnlock(mode) {
+            const val = document.getElementById('lockPass').value;
+            const err = document.getElementById('lockError');
+            err.textContent = '';
+            if (mode === 'upload' && val === UPLOAD_PASSWORD) {
+                accessLevel = 'admin';
+            } else if (mode === 'view' && val === VIEW_PASSWORD) {
+                accessLevel = 'view';
+            } else if (mode === 'view' && val === UPLOAD_PASSWORD) {
+                accessLevel = 'admin';
+            } else if (mode === 'upload' && val === VIEW_PASSWORD) {
+                accessLevel = 'view';
+            } else {
+                err.textContent = 'Wrong password. Try again.';
+                return;
+            }
+            sessionStorage.setItem('ncAccess', accessLevel);
+            document.getElementById('lockOverlay').style.display = 'none';
+            document.body.classList.toggle('mode-view', !isAdmin());
+            if (db) renderAll();
+        }
+
+        function lockOut() {
+            accessLevel = null;
+            sessionStorage.removeItem('ncAccess');
+        }
 
         function openDB() {
             return new Promise((resolve, reject) => {
@@ -525,6 +613,7 @@
 
         /* ===== CLIP DUMP MODAL ===== */
         function openDumpModal(dumpId) {
+            if (!isAdmin()) return;
             document.getElementById('dumpModal').classList.add('active');
             document.getElementById('dumpFiles').value = '';
             document.getElementById('dumpFileName').textContent = '';
@@ -679,49 +768,62 @@
 
         function dumpCardHtml(dump) {
             const count = dump.clips.length;
+            const admin = isAdmin();
             let clipsHtml = '';
             for (const clip of dump.clips.slice(0, 12)) {
                 const urlKey = dump.id + '::' + clip.id;
                 const sizeMB = (clip.size / 1024 / 1024).toFixed(1);
+                const clipActions = admin
+                    ? `<div class="clip-actions">
+                            <button class="btn btn-secondary" onclick="downloadClip('${dump.id}','${clip.id}')">Download</button>
+                            <button class="btn btn-danger" onclick="deleteClip('${dump.id}','${clip.id}')">Delete</button>
+                        </div>`
+                    : '';
                 clipsHtml += `
                     <div class="clip-card">
                         <video src="" muted preload="metadata" data-urlkey="${urlKey}"></video>
                         <div class="clip-info">
                             <div class="clip-name" title="${escapeHtml(clip.name)}">${escapeHtml(clip.name)}</div>
                             <div class="clip-date">${formatDate(clip.date)} &middot; ${sizeMB} MB</div>
-                            <div class="clip-actions">
-                                <button class="btn btn-secondary" onclick="downloadClip('${dump.id}','${clip.id}')">Download</button>
-                                <button class="btn btn-danger" onclick="deleteClip('${dump.id}','${clip.id}')">Delete</button>
-                            </div>
+                            ${clipActions}
                         </div>
                     </div>
                 `;
             }
 
-            return `
-                <div class="card dump-card">
-                    <div class="card-date">${formatDate(dump.createdAt)}</div>
-                    <h3>&#127909; ${escapeHtml(dump.title)}
-                        ${dump.ready
-                            ? `<span class="dump-ready" title="Marked ready to edit">&#9989; Ready to edit</span>`
-                            : `<span class="dump-notready" onclick="toggleDumpReady('${dump.id}')" title="Click to mark this dump ready to edit/download">Not ready</span>`}
-                    </h3>
-                    <span class="dump-badge">Clip Dump</span>
-                    <span class="dump-clip-count">${count} clip${count === 1 ? '' : 's'}</span>
-                    <div class="card-actions">
+            const readyHtml = dump.ready
+                ? `<span class="dump-ready" title="Marked ready to edit">&#9989; Ready to edit</span>`
+                : (admin ? `<span class="dump-notready" onclick="toggleDumpReady('${dump.id}')" title="Click to mark this dump ready to edit/download">Not ready</span>` : '');
+
+            const dtionsHtml = admin
+                ? `<div class="card-actions">
                         <button class="btn btn-success" onclick="downloadDumpZip('${dump.id}')">Download as ZIP</button>
                         <button class="btn btn-secondary" onclick="downloadDumpAll('${dump.id}')">Download All</button>
                         <button class="btn btn-secondary" onclick="openDumpModal('${dump.id}')">Rename</button>
                         ${dump.ready ? `<button class="btn btn-secondary" onclick="toggleDumpReady('${dump.id}')">Mark Not Ready</button>` : ''}
-                        <a class="btn btn-secondary" href="https://www.capcut.com/my-edit?start_tab=video" target="_blank" rel="noopener">Edit in CapCut</a>
                         <button class="btn btn-danger" onclick="deleteDump('${dump.id}')">Delete Dump Set</button>
-                    </div>
-                    <div class="clipdump-area" data-dump="${dump.id}">
+                    </div>`
+                : '';
+
+            const addAreaHtml = admin
+                ? `<div class="clipdump-area" data-dump="${dump.id}">
                         <div class="ma-icon">&#127916;</div>
                         <p>Click or drop to add clips (select multiple)</p>
                         <input type="file" accept="video/*" multiple onchange="handleDumpFilesFromInput(event, '${dump.id}')">
-                    </div>
-                    ${count === 0 ? `<p style="color:#666; font-size:0.85rem; text-align:center; padding:0.5rem 0;">No clips in this dump yet. Add some above!</p>` : ''}
+                    </div>`
+                : '';
+
+            return `
+                <div class="card dump-card">
+                    <div class="card-date">${formatDate(dump.createdAt)}</div>
+                    <h3>&#127909; ${escapeHtml(dump.title)}
+                        ${readyHtml}
+                    </h3>
+                    <span class="dump-badge">Clip Dump</span>
+                    <span class="dump-clip-count">${count} clip${count === 1 ? '' : 's'}</span>
+                    ${dtionsHtml}
+                    ${addAreaHtml}
+                    ${count === 0 ? `<p style="color:#666; font-size:0.85rem; text-align:center; padding:0.5rem 0;">No clips in this dump yet.</p>` : ''}
                     <div class="clipdump-grid">${clipsHtml}</div>
                 </div>
             `;
@@ -884,6 +986,7 @@
         }
 
         function openModal(id) {
+            if (!isAdmin()) return;
             document.getElementById('modal').classList.add('active');
             currentVideoBlob = null;
             currentEditVideoKey = null;
@@ -1001,6 +1104,13 @@
             }
 
             const editVideoBtn = v.videoKey ? `<a class="btn btn-success" href="https://www.capcut.com/my-edit?start_tab=video" target="_blank" rel="noopener">Edit in CapCut</a>` : '';
+            const actionsHtml = isAdmin()
+                ? `<div class="card-actions">
+                        <button class="btn btn-secondary" onclick="openModal('${v.id}')">Edit</button>
+                        ${editVideoBtn}
+                        <button class="btn btn-danger" onclick="deleteVlog('${v.id}')">Delete</button>
+                    </div>`
+                : '';
 
             return `
                 <div class="card">
@@ -1009,11 +1119,7 @@
                     ${v.mood ? `<span class="card-mood">${v.mood}</span>` : ''}
                     ${videoHtml}
                     <p>${escapeHtml(v.content)}</p>
-                    <div class="card-actions">
-                        <button class="btn btn-secondary" onclick="openModal('${v.id}')">Edit</button>
-                        ${editVideoBtn}
-                        <button class="btn btn-danger" onclick="deleteVlog('${v.id}')">Delete</button>
-                    </div>
+                    ${actionsHtml}
                 </div>
             `;
         }
@@ -1092,7 +1198,10 @@
         });
 
         // ===== BACKUP & RESTORE =====
-        function openBackupModal() { document.getElementById('backupModal').classList.add('active'); }
+        function openBackupModal() {
+            if (!isAdmin()) return;
+            document.getElementById('backupModal').classList.add('active');
+        }
         function closeBackupModal() { document.getElementById('backupModal').classList.remove('active'); }
 
         async function exportAll() {
@@ -1240,8 +1349,18 @@
             setTimeout(() => { if (t.parentNode) t.parentNode.removeChild(t); }, ms || 2500);
         }
 
+        function applyAccessUI() {
+            if (accessLevel) {
+                document.getElementById('lockOverlay').style.display = 'none';
+                document.body.classList.toggle('mode-view', !isAdmin());
+            }
+        }
+
+        applyAccessUI();
         openDB().then(() => {
-            renderAll();
+            if (accessLevel !== null && document.getElementById('lockOverlay').style.display === 'none') {
+                renderAll();
+            }
             updateStorageMeter();
         });
     </script>
