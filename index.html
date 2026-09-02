@@ -544,9 +544,7 @@
                     </div>
                 </div>
             </div>
-                </div>
-                <p style="color:#888; font-size:0.85rem; margin-bottom:1rem;">A clip dump is a post you can add clips to over time. Later you'll download all its clips to edit in CapCut on your laptop.</p>
-            </div>
+            <p style="color:#888; font-size:0.85rem; margin-bottom:1rem;">A clip dump is a post you can add clips to over time. Later you'll download all its clips to edit in CapCut on your laptop.</p>
             <div class="form-actions">
                 <button class="btn btn-primary" onclick="saveDumpModal()">Save</button>
                 <button class="btn btn-secondary" onclick="closeDumpModal()">Cancel</button>
@@ -1476,15 +1474,14 @@
         }
 
         async function deleteVlog(id) {
-            if (confirm('Delete this vlog entry?')) {
-                const vlog = vlogs.find(v => v.id === id);
-                if (vlog && vlog.videoKey) { await deleteVideoBlob(vlog.videoKey); await deleteBlobFromSupa(vlog.videoKey); }
-                if (vlog && vlog.thumbKey) { await deleteThumbBlob(vlog.thumbKey); await deleteBlobFromSupa(vlog.thumbKey); }
-                vlogs = vlogs.filter(v => v.id !== id);
-                localStorage.setItem('vlogs', JSON.stringify(vlogs));
-                await pushMetaToSupa();
-                renderAll();
-            }
+            if (!confirm('Delete this vlog entry?')) return;
+            const vlog = vlogs.find(v => v.id === id);
+            vlogs = vlogs.filter(v => v.id !== id);
+            localStorage.setItem('vlogs', JSON.stringify(vlogs));
+            renderAll();
+            if (vlog && vlog.videoKey) { try { await deleteVideoBlob(vlog.videoKey); } catch (e) { console.warn(e); } try { await deleteBlobFromSupa(vlog.videoKey); } catch (e) { console.warn(e); } }
+            if (vlog && vlog.thumbKey) { try { await deleteThumbBlob(vlog.thumbKey); } catch (e) { console.warn(e); } try { await deleteBlobFromSupa(vlog.thumbKey); } catch (e) { console.warn(e); } }
+            try { await pushMetaToSupa(); } catch (e) { console.warn(e); }
         }
 
         function formatDate(iso) {
