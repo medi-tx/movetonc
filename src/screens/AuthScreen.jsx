@@ -13,7 +13,7 @@ function initialInvite() {
   }
 }
 
-export function AuthScreen({ clubName, onDone }) {
+export function AuthScreen({ clubName, onDone, onCreateClub }) {
   const toast = useToast();
   const [mode, setMode] = useState('join');
   const [form, setForm] = useState({
@@ -65,7 +65,7 @@ export function AuthScreen({ clubName, onDone }) {
       <main className="auth-main">
         <section className="auth-card">
           <header className="auth-head">
-            <span className="auth-badge">{clubName || 'Our club'}</span>
+            <span className="auth-badge">{clubName || 'A safe place to chat'}</span>
             <h2>{mode === 'join' ? 'Join the clubhouse' : 'Welcome back'}</h2>
             <p className="auth-sub">
               {mode === 'join'
@@ -201,6 +201,15 @@ export function AuthScreen({ clubName, onDone }) {
                 : 'Grown-ups use the same login, then unlock the safety tools with the Parental PIN.'}
             </p>
           </form>
+
+          {onCreateClub ? (
+            <p className="auth-switch">
+              Starting a classroom or club?{' '}
+              <button type="button" className="link-button" onClick={onCreateClub}>
+                Create a clubhouse
+              </button>
+            </p>
+          ) : null}
         </section>
       </main>
     </div>

@@ -6,7 +6,6 @@ import { Avatar } from '../components/Avatar.jsx';
 import { useToast } from '../components/Toast.jsx';
 import {
   CreateChannelDialog,
-  CreateClubDialog,
   GrownupDashboard,
   ReportDialog,
   UnlockDialog,
@@ -230,14 +229,6 @@ export function ChatApp({ state, onState, onLoggedOut }) {
     setDialog({ type: 'dashboard' });
   }
 
-  async function handleClubCreated(club) {
-    const next = await api.state();
-    onState(next);
-    setActiveClubId(club.id);
-    setDialog(null);
-    setSidebarOpen(false);
-  }
-
   async function handleChannelCreated(channel) {
     const next = await api.state();
     onState(next);
@@ -360,17 +351,6 @@ export function ChatApp({ state, onState, onLoggedOut }) {
               <span aria-hidden="true">{club.emoji}</span>
             </button>
           ))}
-          {unlocked ? (
-            <button
-              type="button"
-              className="club-button club-add"
-              onClick={() => setDialog({ type: 'club' })}
-              title="Create a club"
-              aria-label="Create a club"
-            >
-              +
-            </button>
-          ) : null}
         </div>
         <div className="rail-spacer" />
         {isGrownup ? (
@@ -643,10 +623,6 @@ export function ChatApp({ state, onState, onLoggedOut }) {
           reportsTick={reportsTick}
           onReportsChanged={() => setReportsTick((value) => value + 1)}
         />
-      ) : null}
-
-      {dialog?.type === 'club' ? (
-        <CreateClubDialog onClose={() => setDialog(null)} onCreated={handleClubCreated} />
       ) : null}
 
       {dialog?.type === 'channel' && activeClub ? (

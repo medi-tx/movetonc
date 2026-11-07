@@ -14,7 +14,7 @@ const EMPTY_FORM = {
   avatar: '🦊',
 };
 
-export function SetupScreen({ clubName, onDone }) {
+export function SetupScreen({ clubName, onDone, onBack }) {
   const toast = useToast();
   const [form, setForm] = useState(EMPTY_FORM);
   const [error, setError] = useState('');
@@ -94,11 +94,17 @@ export function SetupScreen({ clubName, onDone }) {
       <main className="auth-main">
         <section className="auth-card">
           <header className="auth-head">
-            <span className="auth-badge">First-time setup · Grown-ups only</span>
+            <span className="auth-badge">Grown-ups only · About 2 minutes</span>
             <h2>Create your clubhouse</h2>
             <p className="auth-sub">
-              Set up the club once, then invite kids with a private code. You can add more clubs and channels later.
+              Start a private space for your classroom, crew, or club. We will make an invite code for the kids and
+              give you the safety controls.
             </p>
+            {onBack ? (
+              <button type="button" className="link-button auth-back" onClick={onBack}>
+                ← Back to login
+              </button>
+            ) : null}
           </header>
 
           {error ? <div className="form-error">{error}</div> : null}
@@ -213,7 +219,8 @@ export function SetupScreen({ clubName, onDone }) {
               {busy ? 'Building your clubhouse…' : 'Create our clubhouse 🌈'}
             </button>
             <p className="fine-print">
-              By continuing, you confirm you are the grown-up responsible for this club and its members.
+              By continuing, you confirm you are the grown-up responsible for this club and its members. DisKids
+              stores only the names, usernames, and messages you enter — no email addresses or ads.
             </p>
           </form>
         </section>

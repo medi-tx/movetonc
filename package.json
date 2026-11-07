@@ -8,10 +8,14 @@
     "dev": "node dev.js",
     "server": "node server.js",
     "build": "node node_modules/vite/bin/vite.js build",
-    "start": "node server.js"
+    "start": "node server.js",
+    "test": "node --test"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
+  },
+  "overrides": {
+    "qs": "^6.16.0"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

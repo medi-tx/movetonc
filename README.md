@@ -1,85 +1,176 @@
-# DisKids 🌈
+# DisKids
 
-A safe, Discord-style clubhouse for kids, classrooms, and after-school clubs. Built as a working local prototype.
+A real, deployable clubhouse for kids — like Discord, but private, invite-only, and built for classrooms, clubs, and families.
 
-Grown-ups create the club once, share a private invite code, and keep an eye on things with a Parental PIN. Kids get cozy channels, realtime chat, and reporting tools — without strangers or the open internet.
+DisKids gives every club its own channels and chat, while grown-ups keep the keys: a Parental PIN unlocks reports, invite codes, member lists, and safety controls. Kids can only join with an invite code, and every club's data is isolated.
 
-## Run it
+## What is included
+
+- **Private clubs** — one club per grown-up account, with its own invite code, members, channels, and chats.
+- **Invite-only membership** — kids join with a 6-character code or `?invite=CODE` link.
+- **Real accounts** — bcrypt-hashed passwords, server-side sessions, and a PIN-protected grown-up area.
+- **Chat** — live messages over Socket.IO, presence, typing indicators, unread badges, announcements, and paused channels.
+- **Safety controls** — kindness filter, link/email blocking for kids, slow mode, message reports, and one-click message removal.
+- **Moderation** — open report queue, member list, channel pause, and announcement-only channels.
+- **Production storage** — PostgreSQL when `DATABASE_URL` is set; JSON files for local development.
+- **Docker and Render support** — health checks, graceful shutdown, rate limits, CSP, secure cookies, and proxy-aware HTTPS.
+
+## Deploy it for real (free)
+
+You need two free accounts: **GitHub** (for the code) and **Neon** (for the database). The app itself runs on **Render's free web tier**.
+
+### 1. Create the database (Neon)
+
+1. Sign up at [neon.tech](https://neon.tech) and create a project.
+2. Copy the **connection string**. It looks like:
+   `postgresql://user:password@ep-xxx.us-east-2.aws.neon.tech/neondb?sslmode=require`
+3. Keep it somewhere private. This is your `DATABASE_URL`.
+
+Neon's free plan autosuspends when idle and wakes on the next request. It does not expire like a temporary database.
+
+### 2. Put the code on GitHub
+
+Create a new **empty** repository on GitHub (for example `diskids`), then from this folder:
 
 ```powershell
-cd diskids
-node dev.js
+git remote add origin https://github.com/YOUR_USERNAME/diskids.git
+git branch -M main
+git push -u origin main
 ```
 
-Vite opens `http://localhost:5173`. The API and Socket.IO server run on `http://localhost:3001`.
+This folder is already a Git repository with a clean production commit.
 
-Other commands:
+### 3. Deploy on Render
+
+1. Sign up at [render.com](https://render.com) with GitHub.
+2. Choose **New → Blueprint** and connect the repository.
+3. Render reads `render.yaml` and asks for the `DATABASE_URL` value. Paste the Neon connection string.
+4. Click **Apply**. Render installs dependencies, builds the front end, and starts the server.
+5. When the health check passes, open the `https://diskids-xxxx.onrender.com` URL.
+
+That is your live app. Create the first club, choose a Parental PIN, and share the invite code with your kids.
+
+> Free Render web services sleep after inactivity. The first visit after a nap can take ~30 seconds. Data lives in Neon, so sleeping does not lose anything.
+
+### Custom domain
+
+Add the domain in Render, then add an environment variable:
+
+```
+APP_ORIGIN=https://your-domain.com
+```
+
+This tightens cookies, CSP, and the request-origin check. Redeploy after changing it.
+
+## Run it locally
 
 ```powershell
-node server.js        # serve the built app + API on :3001
-node node_modules/vite/bin/vite.js build   # rebuild dist/
+npm install
+npm run dev
 ```
 
-On Windows, if `npm run ...` is blocked by PowerShell execution policy, use the `node ...` commands above (or `npm.cmd run ...`).
+- App: http://localhost:5173
+- API: http://localhost:3001
 
-## First run
+The Vite dev server proxies `/api` and `/socket.io` to Express.
 
-1. Open the app. You will get the **grown-up setup** screen.
-2. Pick a club name, your grown-up account, a password, and a 4–6 digit **Parental PIN**.
-3. The next screen shows the club's **invite code**. Share it with your kids.
-4. Kids choose **Join with code**, pick a display name and avatar, and start chatting.
-5. Tap the shield / **Grown-up tools** and enter the PIN to see reports, change safety settings, and copy the invite link.
+Production-style local run:
 
-The invite code and data live in `diskids/data/db.json`. To start completely fresh, stop the server and delete `data/db.json`.
+```powershell
+npm run build
+npm start
+```
 
-## What's included
+Then open http://localhost:3001. Local data is stored in `data/db.json`.
 
-- **Realtime chat** over Socket.IO, persisted to a local JSON store.
-- **Clubs and channels** — grown-ups can create clubs and text or announcement channels.
-- **Presence and typing indicators** — see who's online and who's typing.
-- **Invite-only joining** with a 6-character club code and shareable invite link (`?invite=CODE`).
-- **Parental PIN** separate from the grown-up login; unlocks moderation and settings.
-- **Kindness filter** that masks a small built-in list of unkind words.
-- **Link and email blocking** for kids (grown-ups can always share links).
-- **Slow mode** (off, 2s, 5s, 10s, 30s) to keep chat calm.
-- **Reporting** with reasons; grown-ups see open reports and can remove messages.
-- **Message removal** — grown-ups can remove any message; kids can remove their own.
-- **Channel pausing** and read-only announcement channels.
-- **Unread badges**, day dividers, and a friendly mobile layout.
+To use PostgreSQL locally, set `DATABASE_URL` and `NODE_ENV=production` plus a `SESSION_SECRET` of at least 32 characters.
 
-## Safety model (prototype)
+## Tests
 
-This is a supervised-club tool, not a public social network:
+```powershell
+npm test
+```
 
-- Every kid needs the invite code.
-- Kids cannot post links or email addresses unless a grown-up allows it.
-- A small word list is filtered and the message is flagged in the UI.
-- Grown-ups can pause channels, remove messages, and review reports.
-- No direct messages, file uploads, voice/video, or external embeds.
+The suite starts a real server against a temporary data directory and covers:
 
-**Not production-ready yet:** JSON-file storage and in-memory sessions are designed for a single local server. There is no password reset, email verification, account deletion, audit log, rate limiting per IP, or scalable moderation queue. Add those before exposing this to the public internet.
+- first-run setup and login
+- invite-only registration
+- parental PIN gating
+- kindness filter and link blocking
+- reporting, duplicate reports, and grown-up removal
+- cross-club isolation (channels, messages, settings, moderation)
+- database persistence across a restart
+
+## Environment variables
+
+| Variable | Required | Purpose |
+| --- | --- | --- |
+| `DATABASE_URL` | Production | PostgreSQL connection string. Without it, DisKids uses `data/db.json`. |
+| `SESSION_SECRET` | Production | Random string of 32+ characters. Render generates one. |
+| `NODE_ENV` | Production | Set to `production` for secure cookies and CSP. |
+| `PORT` | No | Server port. Default `3001`. |
+| `DATA_DIR` | No | Local JSON storage directory. Default `./data`. |
+| `APP_ORIGIN` | Recommended | Public origin(s), comma-separated. Also inferred from `RENDER_EXTERNAL_URL`. |
+
+## How the data is scoped
+
+Every account belongs to exactly one club. Every channel, message, report, and session operation is filtered by `clubId` on the server, not just hidden in the UI.
+
+```
+users      -> clubId
+clubs      -> inviteCode, parentalPinHash, safety settings
+channels   -> clubId
+messages   -> clubId + channelId
+reports    -> clubId + messageId
+```
+
+The grown-up dashboard's reports, settings, and invite code are read through `clubId`, so one club cannot moderate or read another.
+
+> Current model: one club per grown-up account. Multiple clubs per grown-up (a staff account that owns several classes) is the next data-model step.
+
+## Storage model
+
+- **Local development:** atomic JSON file (`data/db.json`).
+- **Production:** one JSON document in PostgreSQL (`diskids_state`), written after every change, plus PostgreSQL-backed sessions (`diskids_sessions`).
+
+This keeps the prototype's simple logic while giving you durable, backed-up cloud storage without a rewrite. It is a good fit for a classroom or a small group of clubs on one instance.
+
+For large scale, the next step is normalizing messages/users/channels into relational tables, adding pagination instead of the current 200-message window, and moving presence/typing to a shared adapter if you run more than one instance.
+
+## Safety and privacy notes
+
+- No email addresses, phone numbers, ads, or third-party trackers are collected.
+- Kids cannot join without a current invite code.
+- Reports are only visible to an unlocked grown-up in the same club.
+- Grown-ups choose the display names and usernames kids use. Use nicknames, not full legal names.
+- The kindness filter is a blunt first layer, not a replacement for supervision. It intentionally hides a small built-in word list and rewrites flagged messages with dots.
+- Links and emails are blocked for kids by default. A grown-up can turn that off per club.
+- If a child is in danger, follow your school or organization's safeguarding process. DisKids is not an emergency service.
+
+## Operational checklist
+
+- Keep `SESSION_SECRET` and `DATABASE_URL` private.
+- Enable Neon backups/point-in-time restore on paid plans if the club matters.
+- Update dependencies with `npm audit` and `npm update`.
+- For a school-wide rollout, add a privacy notice and get guardian consent as required in your region.
+- The free Render instance is a single process. Do not scale to multiple instances until presence/typing and storage writes use shared infrastructure.
 
 ## Project layout
 
 ```
 diskids/
-  server.js              Express + Socket.IO + JSON persistence
-  dev.js                 Starts the API and Vite together
-  src/
-    App.jsx              Boot, setup/auth switch
-    screens/             Setup, auth, and chat screens
-    components/          Avatars, modals, dialogs, toasts
-    lib/                 API client, socket client, formatting
-    styles.css           Design system and responsive layout
-  data/                  db.json + session secret (generated)
-  dist/                  production build
+├── server.js            Express API, auth, safety rules, Socket.IO
+├── storage.js           JSON + PostgreSQL persistence, schema migration
+├── dev.js               Runs server + Vite together
+├── render.yaml          Render Blueprint
+├── Dockerfile           Portable container build
+├── src/                 React front end
+│   ├── screens/         Setup, auth, chat
+│   ├── components/      Dialogs, avatars, toasts, branding
+│   └── lib/             API, socket, formatting
+└── test/api.test.js     End-to-end API and isolation tests
 ```
 
-## Good next steps
+## License
 
-- Move persistence to SQLite or Postgres and sessions to a shared store.
-- Add grown-up approval for new members instead of a shared code.
-- Add per-club roles, member removal, and a full audit/moderation log.
-- Let grown-ups customize the blocked-word list and add phrase rules.
-- Add password reset and account deletion with grown-up consent.
-- Add automated tests for the API and safety rules.
+Private prototype for your club. Add a license before distributing publicly.

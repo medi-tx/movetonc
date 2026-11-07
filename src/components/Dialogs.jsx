@@ -236,7 +236,7 @@ export function GrownupDashboard({ state, onClose, onState, reportsTick, onRepor
           <div className="dash-panel-head">
             <div>
               <h3>Club safety</h3>
-              <p>These settings apply to kids in every club.</p>
+              <p>These settings apply to every kid in this club.</p>
             </div>
           </div>
 
@@ -294,8 +294,8 @@ export function GrownupDashboard({ state, onClose, onState, reportsTick, onRepor
           <div className="safety-note">
             <span aria-hidden="true">💡</span>
             <p>
-              Tip: if something feels urgent, remove the message and check in with the kid in person. This app is a
-              prototype and does not replace grown-up supervision.
+              Tip: if something feels urgent, remove the message and check in with the kid in person. DisKids
+              supports grown-up supervision; it does not replace it.
             </p>
           </div>
         </section>
@@ -363,83 +363,8 @@ export function GrownupDashboard({ state, onClose, onState, reportsTick, onRepor
 }
 
 /* ------------------------------------------------------------------ */
-/* Create club + channel                                               */
+/* Channel                                                             */
 /* ------------------------------------------------------------------ */
-
-const CLUB_EMOJI = ['🏡', '🌈', '🚀', '🎨', '⚽', '📚', '🌳', '🦄', '🐙', '🎵'];
-
-export function CreateClubDialog({ onClose, onCreated }) {
-  const toast = useToast();
-  const [form, setForm] = useState({ name: '', description: '', emoji: '🏡' });
-  const [error, setError] = useState('');
-  const [busy, setBusy] = useState(false);
-
-  async function submit(event) {
-    event.preventDefault();
-    setError('');
-    setBusy(true);
-    try {
-      const data = await api.createClub(form);
-      toast.push(`Club “${data.club.name}” created!`, 'success');
-      onCreated(data.club);
-    } catch (createError) {
-      setError(createError.message);
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  return (
-    <Modal title="Create a club" subtitle="A club holds its own channels and chats." icon="🏡" onClose={onClose}>
-      <form onSubmit={submit} className="form">
-        {error ? <div className="form-error">{error}</div> : null}
-        <label className="field">
-          <span>Club name</span>
-          <input
-            type="text"
-            value={form.name}
-            onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
-            placeholder="e.g. Science Squad"
-            maxLength={32}
-            required
-            autoFocus
-            aria-label="Club name"
-          />
-        </label>
-        <label className="field">
-          <span>Short description</span>
-          <input
-            type="text"
-            value={form.description}
-            onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))}
-            placeholder="What is this club for?"
-            maxLength={80}
-            aria-label="Club description"
-          />
-        </label>
-        <div className="field">
-          <span>Club emoji</span>
-          <div className="avatar-picker" role="group" aria-label="Choose a club emoji">
-            {CLUB_EMOJI.map((emoji) => (
-              <button
-                key={emoji}
-                type="button"
-                className={`avatar-choice ${form.emoji === emoji ? 'is-selected' : ''}`}
-                onClick={() => setForm((current) => ({ ...current, emoji }))}
-                aria-pressed={form.emoji === emoji}
-              >
-                {emoji}
-              </button>
-            ))}
-          </div>
-        </div>
-        <button type="submit" className="button button-primary button-wide" disabled={busy}>
-          {busy ? 'Creating…' : 'Create club'}
-        </button>
-      </form>
-    </Modal>
-  );
-}
 
 export function CreateChannelDialog({ club, onClose, onCreated }) {
   const toast = useToast();

@@ -34,7 +34,6 @@ export const api = {
   logout: () => request('/api/logout', { method: 'POST' }),
   unlock: (pin) => request('/api/unlock', { method: 'POST', body: JSON.stringify({ pin }) }),
   lock: () => request('/api/lock', { method: 'POST' }),
-  createClub: (payload) => request('/api/clubs', { method: 'POST', body: JSON.stringify(payload) }),
   createChannel: (payload) => request('/api/channels', { method: 'POST', body: JSON.stringify(payload) }),
   updateChannel: (id, payload) =>
     request(`/api/channels/${id}`, { method: 'PATCH', body: JSON.stringify(payload) }),

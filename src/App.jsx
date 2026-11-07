@@ -32,6 +32,7 @@ function Splash({ error, onRetry }) {
 export default function App() {
   const [state, setState] = useState(null);
   const [error, setError] = useState('');
+  const [showSetup, setShowSetup] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -47,16 +48,24 @@ export default function App() {
     load();
   }, [load]);
 
+  useEffect(() => {
+    if (state?.user) setShowSetup(false);
+  }, [state?.user]);
+
   if (!state) return <Splash error={error} onRetry={load} />;
 
   return (
     <ToastProvider>
-      {!state.setupComplete ? (
-        <SetupScreen clubName={state.clubName} onDone={load} />
-      ) : !state.user ? (
-        <AuthScreen clubName={state.clubName} onDone={load} />
-      ) : (
+      {state.user ? (
         <ChatApp state={state} onState={setState} onLoggedOut={load} />
+      ) : showSetup || !state.hasClubs ? (
+        <SetupScreen
+          clubName={state.clubName}
+          onDone={load}
+          onBack={state.hasClubs ? () => setShowSetup(false) : undefined}
+        />
+      ) : (
+        <AuthScreen clubName={state.clubName} onDone={load} onCreateClub={() => setShowSetup(true)} />
       )}
     </ToastProvider>
   );
