@@ -81,9 +81,18 @@ npm run build
 npm start
 ```
 
-Then open http://localhost:3001. Local data is stored in `data/db.json`.
+Then open http://localhost:3001. With no database configured, local data is stored in `data/db.json`.
 
-To use PostgreSQL locally, set `DATABASE_URL` and `NODE_ENV=production` plus a `SESSION_SECRET` of at least 32 characters.
+If `.env.local` exists, the server loads it automatically (existing environment variables win). When the file contains `DATABASE_URL`, the app uses PostgreSQL instead of JSON. `neon init` created this file for the linked `diskids` Neon project, so `npm run dev` writes to that project's `main` branch. Delete or rename `.env.local` to go back to JSON storage, or point it at a Neon development branch.
+
+Production requires `DATABASE_URL` plus a `SESSION_SECRET` of at least 32 characters. To run production mode locally:
+
+```powershell
+$env:NODE_ENV = 'production'
+$env:SESSION_SECRET = 'at-least-32-random-characters-here'
+$env:DATABASE_URL = 'postgresql://...'
+npm start
+```
 
 ## Tests
 

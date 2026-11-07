@@ -12,6 +12,14 @@ import { fileURLToPath } from 'node:url';
 import { createStorage, DEFAULT_SAFETY, emptyDb } from './storage.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const ENV_FILE = path.join(__dirname, '.env.local');
+
+// Neon's setup writes DATABASE_URL and branch metadata here. Tests intentionally
+// skip it so they always run against a temporary JSON directory.
+if (process.env.NODE_ENV !== 'test' && fs.existsSync(ENV_FILE) && typeof process.loadEnvFile === 'function') {
+  process.loadEnvFile(ENV_FILE);
+}
+
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const IS_PRODUCTION = NODE_ENV === 'production';
 const PORT = Number(process.env.PORT) || 3001;
