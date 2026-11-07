@@ -30,7 +30,9 @@ Neon's free plan autosuspends when idle and wakes on the next request. It does n
 
 ### 2. Put the code on GitHub
 
-Create a new **empty** repository on GitHub (for example `diskids`), then from this folder:
+This folder is already a Git repository. It lives at
+[`medi-tx/movetonc`](https://github.com/medi-tx/movetonc) on the `main` branch. To keep your own copy, fork
+that repository or push this folder to a new one:
 
 ```powershell
 git remote add origin https://github.com/YOUR_USERNAME/diskids.git
@@ -38,12 +40,10 @@ git branch -M main
 git push -u origin main
 ```
 
-This folder is already a Git repository with a clean production commit.
-
 ### 3. Deploy on Render
 
 1. Sign up at [render.com](https://render.com) with GitHub.
-2. Choose **New → Blueprint** and connect the repository.
+2. Choose **New → Blueprint** and connect the repository that contains this code.
 3. Render reads `render.yaml` and asks for the `DATABASE_URL` value. Paste the Neon connection string.
 4. Click **Apply**. Render installs dependencies, builds the front end, and starts the server.
 5. When the health check passes, open the `https://diskids-xxxx.onrender.com` URL.
